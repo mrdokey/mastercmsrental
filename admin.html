@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Multi-Tenant Admin Control Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+    <!-- HIDDEN GENERIC INLINE FILE INPUT FOR CLOUDINARY -->
+    <input type="file" id="inlineCloudinaryFile" class="hidden" onchange="handleInlineImageUpload()">
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginSection" class="min-h-screen flex items-center justify-center flex-col p-6">
+        <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-gray-100">
+            <div class="text-center mb-6">
+                <i class="fas fa-cubes text-4xl text-indigo-600 mb-2"></i>
+                <h2 class="text-2xl font-black text-gray-900">SaaS Admin Portal</h2>
+                <p class="text-gray-500 text-sm mt-1">Multi-Tenant Dynamic Engine</p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Database Klien (Tenant ID)</label>
+                <input type="text" id="loginTenant" value="cms_493_scooter" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold">
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Token Kunci API Admin</label>
+                <input type="password" id="loginToken" placeholder="••••••••••••" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold">
+            </div>
+
+            <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md">
+                Masuk ke Dashboard
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN PANEL DASHBOARD -->
+    <div id="dashboardSection" class="hidden min-h-screen flex flex-col md:flex-row">
+        
+        <!-- SIDEBAR MENU -->
+        <aside class="w-full md:w-64 bg-indigo-900 text-white flex flex-col">
+            <div class="p-6 border-b border-indigo-800 text-center">
+                <h3 class="text-md font-black tracking-wider text-yellow-400">CONTROL CENTER</h3>
+                <p class="text-xs text-indigo-300 mt-1" id="currentTenantName">Loading...</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="switchTab('settings')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left bg-indigo-800"><i class="fas fa-cog"></i> Pengaturan Umum</button>
+                <button onclick="switchTab('theme')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left"><i class="fas fa-palette"></i> Pilih Tema Warna</button>
+                <button onclick="switchTab('instagram')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left"><i class="fab fa-instagram"></i> Widget Instagram</button>
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-sm font-bold transition text-left mt-10"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+            </nav>
+        </aside>
+
+        <!-- CONTAINER KONTEN -->
+        <main class="flex-1 p-6 md:p-10">
+
+            <!-- TAB 1: SETELAN UMUM -->
+            <section id="tab-settings" class="tab-content">
+                <div class="max-w-3xl bg-white p-8 rounded-3xl shadow-md border border-gray-50">
+                    <h2 class="text-xl font-extrabold mb-6 text-gray-900 border-b pb-4"><i class="fas fa-cog text-indigo-600 me-2"></i> Pengaturan Website Klien</h2>
+                    <form id="settingsForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Nama Website</label>
+                                <input type="text" name="site_name" class="w-full p-3 border rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Tagline</label>
+                                <input type="text" name="tagline" class="w-full p-3 border rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 text-sm">
+                            </div>
+                        </div>
+                        
+                        <!-- INTEGRASI INLINE UPLOAD UNTUK LOGO & FAVICON -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Logo Website</label>
+                                <div class="flex gap-2">
+                                    <input type="text" name="logo_url" id="logoUrlField" placeholder="https://..." class="flex-1 p-3 border rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 text-xs font-mono">
+                                    <button type="button" onclick="triggerInlineUpload('logoUrlField')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                                        <i class="fas fa-upload"></i> Upload
+                                    </button>
+                                </div>
+                                <!-- Tempat Pratinjau Logo -->
+                                <div class="mt-2 hidden" id="logoUrlField-preview-container">
+                                    <img id="logoUrlField-preview" src="" class="h-12 rounded border object-contain bg-gray-50 p-1 shadow-inner">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Favicon Website</label>
+                                <div class="flex gap-2">
+                                    <input type="text" name="favicon_url" id="faviconUrlField" placeholder="https://..." class="flex-1 p-3 border rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 text-xs font-mono">
+                                    <button type="button" onclick="triggerInlineUpload('faviconUrlField')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                                        <i class="fas fa-upload"></i> Upload
+                                    </button>
+                                </div>
+                                <!-- Tempat Pratinjau Favicon -->
+                                <div class="mt-2 hidden" id="faviconUrlField-preview-container">
+                                    <img id="faviconUrlField-preview" src="" class="h-12 w-12 rounded border object-contain bg-gray-50 p-1 shadow-inner">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Nomor WhatsApp Admin</label>
+                                <input type="text" name="whatsapp_number" class="w-full p-3 border rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">SaaS Google Sheets API URL (GAS_URL)</label>
+                                <input type="text" name="gas_url" class="w-full p-3 border rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Alamat Kantor/Klien</label>
+                            <textarea name="address" rows="2" class="w-full p-3 border rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 text-sm"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Embed Google Maps (Iframe HTML)</label>
+                            <textarea name="google_maps_embed" rows="3" class="w-full p-3 border rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 text-xs font-mono"></textarea>
+                        </div>
+                        <button type="button" onclick="saveSettings()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-md">Simpan Konfigurasi</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- TAB 2: SELEKTOR WARNA TEMA -->
+            <section id="tab-theme" class="tab-content hidden">
+                <div class="max-w-3xl bg-white p-8 rounded-3xl shadow-md border border-gray-50">
+                    <h2 class="text-xl font-extrabold mb-6 text-gray-900 border-b pb-4"><i class="fas fa-palette text-indigo-600 me-2"></i> Pilihan Skema Warna Tema</h2>
+                    <div class="mb-8">
+                        <label class="block text-xs font-bold text-gray-600 mb-3">Gunakan Tema Preset Cepat (Quick Presets)</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <button onclick="applyPreset('#FFD700', '#3E2723', '#fdfaf5', '#2C1B18')" class="p-4 border rounded-2xl flex items-center justify-between hover:border-indigo-500 text-left transition">
+                                <div><span class="block font-bold text-sm">Bali Gold Amber</span><span class="text-xs text-gray-400">Classic Yellow, Brown</span></div>
+                                <div class="flex gap-1"><div class="w-5 h-5 rounded-full" style="background:#FFD700"></div><div class="w-5 h-5 rounded-full" style="background:#3E2723"></div></div>
+                            </button>
+                            <button onclick="applyPreset('#00B4D8', '#03045E', '#F0F8FF', '#03045E')" class="p-4 border rounded-2xl flex items-center justify-between hover:border-indigo-500 text-left transition">
+                                <div><span class="block font-bold text-sm">Seminyak Blue</span><span class="text-xs text-gray-400">Beach Ocean Breeze</span></div>
+                                <div class="flex gap-1"><div class="w-5 h-5 rounded-full" style="background:#00B4D8"></div><div class="w-5 h-5 rounded-full" style="background:#03045E"></div></div>
+                            </button>
+                            <button onclick="applyPreset('#52B788', '#1B4332', '#F4F9F4', '#1B4332')" class="p-4 border rounded-2xl flex items-center justify-between hover:border-indigo-500 text-left transition">
+                                <div><span class="block font-bold text-sm">Ubud Forest Green</span><span class="text-xs text-gray-400">Green, Nature Fresh</span></div>
+                                <div class="flex gap-1"><div class="w-5 h-5 rounded-full" style="background:#52B788"></div><div class="w-5 h-5 rounded-full" style="background:#1B4332"></div></div>
+                            </button>
+                            <button onclick="applyPreset('#FF4D6D', '#5C0D12', '#FFF0F3', '#5C0D12')" class="p-4 border rounded-2xl flex items-center justify-between hover:border-indigo-500 text-left transition">
+                                <div><span class="block font-bold text-sm">Sunset Canggu</span><span class="text-xs text-gray-400">Sweet Red Pink Vibes</span></div>
+                                <div class="flex gap-1"><div class="w-5 h-5 rounded-full" style="background:#FF4D6D"></div><div class="w-5 h-5 rounded-full" style="background:#5C0D12"></div></div>
+                            </button>
+                        </div>
+                    </div>
+                    <form id="themeForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Warna Utama (Primary Yellow)</label>
+                                <div class="flex gap-2">
+                                    <input type="color" id="primaryColorInput" class="h-12 w-12 border rounded-xl">
+                                    <input type="text" name="primary_color" id="primaryHexText" class="flex-1 p-3 border rounded-xl outline-none font-semibold uppercase text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Warna Kontras (Secondary Dark Brown)</label>
+                                <div class="flex gap-2">
+                                    <input type="color" id="secondaryColorInput" class="h-12 w-12 border rounded-xl">
+                                    <input type="text" name="secondary_color" id="secondaryHexText" class="flex-1 p-3 border rounded-xl outline-none font-semibold uppercase text-sm">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Warna Latar Halaman (Background)</label>
+                                <div class="flex gap-2">
+                                    <input type="color" id="bgColorInput" class="h-12 w-12 border rounded-xl">
+                                    <input type="text" name="bg_color" id="bgHexText" class="flex-1 p-3 border rounded-xl outline-none font-semibold uppercase text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Warna Teks Utama (Text Dark)</label>
+                                <div class="flex gap-2">
+                                    <input type="color" id="textColorInput" class="h-12 w-12 border rounded-xl">
+                                    <input type="text" name="text_color" id="textHexText" class="flex-1 p-3 border rounded-xl outline-none font-semibold uppercase text-sm">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="saveTheme()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-md">Terapkan Tema Warna</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- TAB 3: SMART INSTAGRAM WIDGET SAKELAR -->
+            <section id="tab-instagram" class="tab-content hidden">
+                <div class="max-w-3xl bg-white p-8 rounded-3xl shadow-md border border-gray-50">
+                    <h2 class="text-xl font-extrabold mb-6 text-gray-900 border-b pb-4"><i class="fab fa-instagram text-indigo-600 me-2"></i> Integrasi Galeri Instagram Dinamis</h2>
+                    <form id="instagramForm" class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Status Embed Instagram</label>
+                            <select name="instagram_active" id="instagramActiveField" class="w-full p-3 border rounded-xl outline-none text-sm font-semibold">
+                                <option value="1">ON - Tampilkan Iframe Feed</option>
+                                <option value="0">OFF - Sembunyikan Grid Instagram</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Instagram Username / ID Handle</label>
+                            <div class="flex">
+                                <span class="bg-gray-100 p-3 border border-r-0 rounded-l-xl text-gray-400 font-semibold text-sm">@</span>
+                                <input type="text" name="instagram_username" id="instagramUserField" placeholder="493scooterrentals" class="flex-1 p-3 border rounded-r-xl outline-none text-sm font-semibold">
+                            </div>
+                            <p class="text-xs text-gray-400 mt-2">Masukkan nama akun Instagram tanpa tanda @. Sistem JavaScript akan merender widget secara otomatis.</p>
+                        </div>
+                        <button type="button" onclick="saveInstagram()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-md">Simpan Pengaturan Instagram</button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

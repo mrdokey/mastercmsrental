@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=[ID_GOOGLE_ADS]"></script> 
+    <script> 
+      window.dataLayer = window.dataLayer || []; 
+      function gtag(){dataLayer.push(arguments);} 
+      gtag('js', new Date()); 
+      gtag('config', '[ID_GOOGLE_ADS]'); 
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Premium Scooter Rental in Bali</title>
+    <meta name="description" content="Explore Bali the easy and fun way! Rent top-condition, premium automatic scooters.">
+    <link rel="icon" type="image/png" id="siteFavicon" href="">
+    
+    <meta name="theme-color" content="#3E2723">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="lang-en">
+
+    <nav>
+        <div class="logo">
+            <img id="siteLogo" src="" alt="Logo">
+            <span id="siteTitleNav">Scooter <b>Rentals</b></span>
+        </div>
+        
+        <ul class="nav-links-desktop" id="desktopNav"></ul>
+
+        <button class="burger-btn" onclick="toggleDrawer(true)">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <button class="lang-btn" onclick="toggleLang()" style="margin-left: 15px;">EN | ID</button>
+    </nav>
+
+    <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
+    <div class="mobile-drawer" id="mobileDrawer">
+        <button class="close-drawer" onclick="toggleDrawer(false)">&times;</button>
+        <div id="drawerLinks"></div>
+    </div>
+
+    <section class="hero" id="home">
+        <div>
+            <h2 id="siteHeroTitle">Loading...</h2>
+            <p class="id" id="siteTaglineId"></p>
+            <p class="en" id="siteTaglineEn"></p>
+        </div>
+    </section>
+
+    <div class="container">
+        
+        <div id="armada" class="section-title">
+            <h3 class="id">Pilihan Armada Terbaik</h3>
+            <h3 class="en">Our Best Fleet</h3>
+            <div class="underline"></div>
+        </div>
+
+        <div id="fleetContainer" class="fleet-grid">
+            <div id="loadingFleet">
+                <div class="spinner"></div>
+                <p class="id">Memuat armada...</p>
+                <p class="en">Loading fleet...</p>
+            </div>
+        </div>
+
+        <!-- SEKSI SMART INSTAGRAM EMBED (DIKONTROL ON/OFF DARI ADMIN) -->
+        <section id="instagramSection" class="instagram-section" style="display: none; margin-top: 60px;">
+            <div class="section-title">
+                <h3 class="id">Galeri Instagram Kami</h3>
+                <h3 class="en">Our Instagram Gallery</h3>
+                <div class="underline"></div>
+            </div>
+            <div class="instagram-wrapper" id="instagramEmbedContainer">
+                <!-- Iframe akan disuntikkan secara dinamis oleh script.js -->
+            </div>
+        </section>
+
+        <div id="layanan" class="section-title" style="margin-top: 60px;">
+            <h3 class="id">Layanan Unggulan</h3>
+            <h3 class="en">Our Services</h3>
+            <div class="underline"></div>
+        </div>
+
+        <div class="layanan-grid">
+            <div class="layanan-card">
+                <i class="fas fa-shield-alt"></i>
+                <h4 class="id">Kondisi Prima</h4><h4 class="en">Prime Condition</h4>
+                <p class="small text-muted id">Unit selalu diservis berkala.</p>
+                <p class="small text-muted en">Units are regularly serviced.</p>
+            </div>
+            <div class="layanan-card">
+                <i class="fas fa-motorcycle"></i>
+                <h4 class="id">Sewa Motor</h4><h4 class="en">Bike Rental</h4>
+                <p class="small text-muted id">Berbagai pilihan motor matic.</p>
+                <p class="small text-muted en">Various types of automatic bikes.</p>
+            </div>
+        </div>
+
+        <div id="lokasi" class="section-title" style="margin-top: 60px;">
+            <h3 class="id">Lokasi Kami</h3>
+            <h3 class="en">Our Location</h3>
+            <div class="underline"></div>
+        </div>
+
+        <div class="map-wrapper" id="mapContainer"></div>
+
+    </div>
+
+    <footer>
+        <p>© 2026 <span id="siteFooterName"></span> | <span class="id">Didukung oleh</span><span class="en">Powered by</span> MRD Digital Solution</p>
+        <p class="address" id="siteFooterAddress"></p>
+    </footer>
+
+    <div class="floating-nav" id="mobileNav">
+        <a onclick="slowScroll('#home')" class="nav-item">
+            <i class="fas fa-home"></i> <span>Home</span>
+        </a>
+        <a onclick="slowScroll('#layanan')" class="nav-item">
+            <i class="fas fa-hand-holding-heart"></i> <span class="id">Layanan</span><span class="en">Services</span>
+        </a>
+        <a href="showunit.html" class="nav-item">
+            <i class="fas fa-list-ul"></i> <span class="id">Armada</span><span class="en">Fleet</span>
+        </a>
+        <a href="cariunit.html" class="nav-item">
+            <i class="fas fa-calendar-check"></i> <span class="id">Cek Unit</span><span class="en">Check</span>
+        </a>
+        <a href="" target="_blank" class="nav-item" id="floatingWaLink">
+            <i class="fab fa-whatsapp"></i> <span>WhatsApp</span>
+        </a>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
