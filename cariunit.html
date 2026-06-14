@@ -1,0 +1,46 @@
+// HANDSHAKE AWAL (DENGAN PROTEKSI REDIRECT OTOMATIS)
+    async function initPage() {
+        try {
+            const res = await fetch(`${BASE_API_URL}/api/init`, {
+                headers: { 'X-Tenant-ID': TENANT_ID }
+            });
+            const data = await res.json();
+            
+            if (data.status === "success") {
+                const settings = data.settings || {};
+                
+                // SISTEM PROTEKSI SAKELAR CARI UNIT: Alihkan paksa jika status OFF ('0')
+                if (settings.cari_unit_active === "0") {
+                    console.warn("[Proteksi Sistem] Fitur Cari Unit dinonaktifkan oleh administrator. Mengalihkan...");
+                    window.location.href = "index.html";
+                    return;
+                }
+
+                // Menyuntikkan Skema Warna Tema Dinamis
+                const root = document.documentElement;
+                root.style.setProperty('--primary-yellow', settings.primary_color || '#FFD700');
+                root.style.setProperty('--dark-brown', settings.secondary_color || '#3E2723');
+                root.style.setProperty('--bg-page', settings.bg_color || '#fdfaf5');
+                root.style.setProperty('--text-dark', settings.text_color || '#2C1B18');
+
+                adminNumber = settings.whatsapp_number || "6285739403193";
+                namaKlien = settings.site_name || "493 Scooter Rentals";
+
+                const logoUrl = settings.logo_url || "https://i.ibb.co.com/RT54HDDv/1000147993.png";
+                document.getElementById('siteFavicon').href = settings.favicon_url || logoUrl;
+                document.getElementById('siteLogo').src = logoUrl;
+                document.getElementById('siteTitleNav').innerHTML = `${namaKlien.split(' ')[0]} <b>${namaKlien.split(' ').slice(1).join(' ')}</b>`;
+                document.getElementById('siteFooterName').innerText = namaKlien;
+                document.getElementById('siteFooterAddress').innerText = settings.address || "Jl. Nakula Gg. Baik-Baik No.1, Seminyak, Bali";
+                document.getElementById('floatingWaLink').href = `https://wa.me/${adminNumber}`;
+                
+                const placeholders = document.querySelectorAll('.site-name-placeholder');
+                placeholders.forEach(el => el.innerText = namaKlien);
+
+                renderNavigation(data.navigation, settings.cari_unit_active || "1");
+            }
+        } catch (err) {
+            console.warn("[Cari Unit Engine] Gagal memuat tema dinamis. Menggunakan fallback.", err);
+        }
+        fetchData();
+    }

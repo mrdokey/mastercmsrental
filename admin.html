@@ -119,11 +119,19 @@
                                 </div>
                             </div>
 
-                            <!-- INPUT TOKENS KEAMANAN EDITABLE -->
-                            <div>
-                                <label class="block text-xs font-bold text-red-600 mb-1">Kunci Token Keamanan Admin (Ubah Token)</label>
-                                <input type="text" name="admin_token" id="adminTokenField" placeholder="Masukkan token keamanan kustom" class="w-full p-3 border border-red-200 rounded-xl outline-none focus:ring-1 focus:ring-red-500 text-sm font-semibold">
-                                <p class="text-xs text-gray-400 mt-1">Ganti nilai di atas untuk mengganti password/token default 'RAHASIA_CMS_HOSTEL_123'.</p>
+                            <!-- SAKELAR INTEGRASI DYNAMIC CARI UNIT -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-indigo-600 mb-1">Status Fitur Cari Unit (Real-Time Availability)</label>
+                                    <select name="cari_unit_active" id="cariUnitActiveField" class="w-full p-3 border border-indigo-200 rounded-xl outline-none text-sm font-bold text-indigo-700 bg-indigo-50">
+                                        <option value="1">ON - Aktifkan & Tampilkan Navigasi Cari Unit</option>
+                                        <option value="0">OFF - Sembunyikan Navigasi Cari Unit</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-red-600 mb-1">Kunci Token Keamanan Admin (Ubah Token)</label>
+                                    <input type="text" name="admin_token" id="adminTokenField" placeholder="Masukkan token keamanan kustom" class="w-full p-3 border border-red-200 rounded-xl outline-none focus:ring-1 focus:ring-red-500 text-sm font-semibold">
+                                </div>
                             </div>
 
                             <div>
@@ -236,6 +244,6 @@
         </main>
     </div>
 
-    <script src="admin.js?=v.101"></script>
+    <script src="admin.js"></script>
 </body>
 </html>

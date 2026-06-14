@@ -1,4 +1,3 @@
-// CONFIG UTAMA DASHBOARD ADMIN (LEWAT REVERSE PROXY NGINX HTTPS SECURE)
 const BASE_API_URL = "https://wa.mrdsolution.my.id/cms-api";
 
 let tenantId = "";
@@ -86,6 +85,9 @@ async function loadSettings() {
 
             // Isi nilai input token admin kustom
             document.getElementById('adminTokenField').value = settings.admin_token || apiKey;
+
+            // SINKRONISASI NILAI STATUS SAKELAR CARI UNIT (1 / 0)
+            document.getElementById('cariUnitActiveField').value = settings.cari_unit_active || "1";
 
             // Isi nilai input form Tema Warna
             document.getElementById('primaryHexText').value = settings.primary_color || "#FFD700";
@@ -209,6 +211,7 @@ function applyPreset(p, s, b, t) {
 async function saveSettings() {
     const form = document.getElementById('settingsForm');
     const newTokenValue = document.getElementById('adminTokenField').value.trim();
+    const cariUnitActiveValue = document.getElementById('cariUnitActiveField').value;
 
     const payload = [
         { key: 'site_name', value: form.site_name.value },
@@ -217,6 +220,7 @@ async function saveSettings() {
         { key: 'favicon_url', value: form.favicon_url.value },
         { key: 'whatsapp_number', value: form.whatsapp_number.value },
         { key: 'gas_url', value: form.gas_url.value },
+        { key: 'cari_unit_active', value: cariUnitActiveValue }, // Kirim Status Sakelar ke VPS
         { key: 'admin_token', value: newTokenValue },
         { key: 'address', value: form.address.value },
         { key: 'google_maps_embed', value: form.google_maps_embed.value }
@@ -225,7 +229,7 @@ async function saveSettings() {
     Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-        const res = await fetch(`${BASE_API_URL}/api/settings/update`, {
+        const res = await fetch(`${API_BASE_URL}/api/settings/update`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -261,7 +265,7 @@ async function saveTheme() {
     Swal.fire({ title: 'Menyimpan Tema...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-        const res = await fetch(`${BASE_API_URL}/api/settings/update`, {
+        const res = await fetch(`${API_BASE_URL}/api/settings/update`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -289,7 +293,7 @@ async function saveInstagram() {
     Swal.fire({ title: 'Menyimpan Instagram...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-        const res = await fetch(`${BASE_API_URL}/api/settings/update`, {
+        const res = await fetch(`${API_BASE_URL}/api/settings/update`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -14,9 +14,9 @@ async function initPage() {
         const data = await res.json();
         
         if (data.status === "success") {
-            const settings = data.settings;
+            const settings = data.settings || {};
             
-            // Suntik Variabel Warna Tema Dinamis ke CSS Root
+            // Suntik Variabel Warna Tema Dinamis ke CSS Root (Dengan Fallback Default)
             const root = document.documentElement;
             root.style.setProperty('--primary-yellow', settings.primary_color || '#FFD700');
             root.style.setProperty('--dark-brown', settings.secondary_color || '#3E2723');
@@ -26,15 +26,26 @@ async function initPage() {
             adminWA = settings.whatsapp_number || "6285739403193";
             namaKlien = settings.site_name || "493 Scooter Rentals";
 
-            document.getElementById('siteFavicon').href = settings.favicon_url || settings.logo_url;
-            document.getElementById('siteLogo').src = settings.logo_url;
-            document.getElementById('siteTitleNav').innerHTML = `${settings.site_name.split(' ')[0]} <b>${settings.site_name.split(' ').slice(1).join(' ')}</b>`;
-            document.getElementById('siteHeroTitle').innerText = settings.site_name;
-            document.getElementById('siteTaglineId').innerText = settings.tagline_id || settings.tagline || "";
-            document.getElementById('siteTaglineEn').innerText = settings.tagline_en || settings.tagline || "";
-            document.getElementById('siteFooterName').innerText = settings.site_name;
-            document.getElementById('siteFooterAddress').innerText = settings.address;
-            document.getElementById('floatingWaLink').href = `https://wa.me/${settings.whatsapp_number}`;
+            // IMPLEMENTASI NULL-SAFETY (Mencegah Crash jika data kosong)
+            const siteName = settings.site_name || "493 Scooter Rentals";
+            const logoUrl = settings.logo_url || "https://i.ibb.co.com/RT54HDDv/1000147993.png";
+            const taglineId = settings.tagline_id || settings.tagline || "Eksplorasi Bali Lebih Mudah & Seru";
+            const taglineEn = settings.tagline_en || settings.tagline || "Explore Bali Easier & More Fun";
+            const addressText = settings.address || "Jl. Nakula Gg. Baik-Baik No.1, Seminyak, Bali";
+
+            // Pisahkan kata pertama secara aman untuk logo navigasi
+            const firstWord = siteName.split(' ')[0] || "493";
+            const restOfName = siteName.split(' ').slice(1).join(' ') || "Scooter Rentals";
+
+            document.getElementById('siteFavicon').href = settings.favicon_url || logoUrl;
+            document.getElementById('siteLogo').src = logoUrl;
+            document.getElementById('siteTitleNav').innerHTML = `${firstWord} <b>${restOfName}</b>`;
+            document.getElementById('siteHeroTitle').innerText = siteName;
+            document.getElementById('siteTaglineId').innerText = taglineId;
+            document.getElementById('siteTaglineEn').innerText = taglineEn;
+            document.getElementById('siteFooterName').innerText = siteName;
+            document.getElementById('siteFooterAddress').innerText = addressText;
+            document.getElementById('floatingWaLink').href = `https://wa.me/${adminWA}`;
             
             if (settings.google_maps_embed) {
                 document.getElementById('mapContainer').innerHTML = settings.google_maps_embed;
@@ -52,23 +63,32 @@ async function initPage() {
                             allowtransparency="true">
                     </iframe>`;
                 document.getElementById('instagramSection').style.display = "block";
+            } else {
+                document.getElementById('instagramSection').style.display = "none";
             }
 
-            renderNavigation(data.navigation);
+            // Muat Navigasi dari database secara dinamis & menyertakan parameter sakelar Cek Unit
+            if (data.navigation) {
+                renderNavigation(data.navigation, settings.cari_unit_active || "1");
+            }
         }
     } catch (err) {
-        console.warn("[CMS Framework] VPS Offline. Memuat fallback.", err);
+        console.warn("[CMS Framework Error] Gagal merender data dinamis. Memuat fallback.", err);
     }
     loadFleet();
 }
 
-function renderNavigation(menus) {
+// INJEKSI DIGITAL SECARA PINTAR DAN MANDIRI
+function renderNavigation(menus, cariUnitActive) {
     const desktopNav = document.getElementById('desktopNav');
     const drawerLinks = document.getElementById('drawerLinks');
+    
+    if (!desktopNav || !drawerLinks) return;
     
     desktopNav.innerHTML = "";
     drawerLinks.innerHTML = "";
 
+    // 1. Render Menu Navigasi Standar dari Database MySQL
     menus.forEach(menu => {
         const itemHtml = `
             <a onclick="slowScroll('${menu.target_url}')">
@@ -79,6 +99,30 @@ function renderNavigation(menus) {
         desktopNav.innerHTML += `<li>${itemHtml}</li>`;
         drawerLinks.innerHTML += itemHtml;
     });
+
+    // 2. SISTEM INTELEKTUAL: Sisipkan otomatis "Cek Unit" jika status sakelar AKTIF (cari_unit_active = 1)
+    if (cariUnitActive === "1") {
+        const cekUnitHtml = `
+            <a href="cariunit.html">
+                <span class="id">Cek Unit</span>
+                <span class="en">Check Unit</span>
+            </a>
+        `;
+        desktopNav.innerHTML += `<li>${cekUnitHtml}</li>`;
+        drawerLinks.innerHTML += cekUnitHtml;
+        
+        // Tampilkan tombol navigasi floating mobile bawah ponsel
+        const mobileCekBtn = document.getElementById('mobileCekUnitLink');
+        if (mobileCekBtn) {
+            mobileCekBtn.style.setProperty('display', 'block', 'important');
+        }
+    } else {
+        // Sembunyikan tombol navigasi floating mobile bawah ponsel jika dinonaktifkan
+        const mobileCekBtn = document.getElementById('mobileCekUnitLink');
+        if (mobileCekBtn) {
+            mobileCekBtn.style.setProperty('display', 'none', 'important');
+        }
+    }
 }
 
 function toggleDrawer(open) {
@@ -158,6 +202,8 @@ async function loadFleet() {
 
 function renderFleet(items) {
     const container = document.getElementById('fleetContainer');
+    if (!container) return;
+    
     container.innerHTML = "";
     let groups = {};
 
