@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://wa.mrdsolution.my.id:5000";
+// CONFIG UTAMA DASHBOARD ADMIN (LEWAT REVERSE PROXY NGINX HTTPS SECURE)
+const BASE_API_URL = "https://wa.mrdsolution.my.id/cms-api";
 
 let tenantId = "";
 let apiKey = "";
@@ -7,7 +8,6 @@ let apiKey = "";
 const CLOUDINARY_CLOUD_NAME = "dnobafum2";
 const CLOUDINARY_PRESET = "cms_rental";
 
-// State Global untuk mengidentifikasi input mana yang sedang diunggah gambarnya
 let activeInlineTargetId = "";
 
 window.onload = function() {
@@ -36,7 +36,7 @@ async function handleLogin() {
     Swal.fire({ title: 'Memverifikasi...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+        const res = await fetch(`${BASE_API_URL}/api/auth/verify`, {
             method: 'GET',
             headers: {
                 'X-Tenant-ID': tInput,
@@ -61,13 +61,13 @@ async function handleLogin() {
             Swal.fire('Gagal', 'Token admin salah.', 'error');
         }
     } catch (err) {
-        Swal.fire('Error', 'Gagal menghubungkan ke port 5000 VPS.', 'error');
+        Swal.fire('Error', 'Gagal menghubungkan ke VPS melalui HTTPS SSL Nginx.', 'error');
     }
 }
 
 async function loadSettings() {
     try {
-        const res = await fetch(`${API_BASE_URL}/api/init`, {
+        const res = await fetch(`${BASE_API_URL}/api/init`, {
             headers: { 'X-Tenant-ID': tenantId }
         });
         const data = await res.json();
@@ -83,6 +83,9 @@ async function loadSettings() {
             form.gas_url.value = settings.gas_url || "";
             form.address.value = settings.address || "";
             form.google_maps_embed.value = settings.google_maps_embed || "";
+
+            // Isi nilai input token admin kustom
+            document.getElementById('adminTokenField').value = settings.admin_token || apiKey;
 
             // Isi nilai input form Tema Warna
             document.getElementById('primaryHexText').value = settings.primary_color || "#FFD700";
@@ -118,7 +121,6 @@ async function handleInlineImageUpload() {
 
     const file = fileInput.files[0];
 
-    // Animasi Loading SweetAlert2 Profesional saat Upload Berlangsung
     Swal.fire({
         title: 'Mengunggah Gambar...',
         text: 'Mengirim file gambar langsung ke CDN Cloudinary.',
@@ -140,11 +142,9 @@ async function handleInlineImageUpload() {
         Swal.close();
 
         if (data.secure_url) {
-            // Suntik URL hasil unggah langsung ke input target
             const targetField = document.getElementById(activeInlineTargetId);
             targetField.value = data.secure_url;
 
-            // Perbarui visual pratinjau gambar di bawah input
             updateImagePreview(activeInlineTargetId, data.secure_url);
 
             Swal.fire({
@@ -162,11 +162,9 @@ async function handleInlineImageUpload() {
         Swal.fire('Error', 'Gagal menghubungkan ke server Cloudinary API.', 'error');
     }
 
-    // Reset isi input file agar dapat digunakan kembali untuk file yang sama
     fileInput.value = "";
 }
 
-// FUNGSI UPDATE PREVIEW GAMBAR SECARA VISUAL
 function updateImagePreview(fieldId, url) {
     const previewImg = document.getElementById(`${fieldId}-preview`);
     const previewContainer = document.getElementById(`${fieldId}-preview-container`);
@@ -179,7 +177,6 @@ function updateImagePreview(fieldId, url) {
     }
 }
 
-// HANDLER COLOR PICKER SINKRONISASI
 const pickerMap = [
     { picker: 'primaryColorInput', text: 'primaryHexText' },
     { picker: 'secondaryColorInput', text: 'secondaryHexText' },
@@ -211,6 +208,8 @@ function applyPreset(p, s, b, t) {
 
 async function saveSettings() {
     const form = document.getElementById('settingsForm');
+    const newTokenValue = document.getElementById('adminTokenField').value.trim();
+
     const payload = [
         { key: 'site_name', value: form.site_name.value },
         { key: 'tagline', value: form.tagline.value },
@@ -218,6 +217,7 @@ async function saveSettings() {
         { key: 'favicon_url', value: form.favicon_url.value },
         { key: 'whatsapp_number', value: form.whatsapp_number.value },
         { key: 'gas_url', value: form.gas_url.value },
+        { key: 'admin_token', value: newTokenValue },
         { key: 'address', value: form.address.value },
         { key: 'google_maps_embed', value: form.google_maps_embed.value }
     ];
@@ -225,7 +225,7 @@ async function saveSettings() {
     Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/settings/update`, {
+        const res = await fetch(`${BASE_API_URL}/api/settings/update`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -236,6 +236,11 @@ async function saveSettings() {
         });
         const data = await res.json();
         if (data.status === "success") {
+            if (newTokenValue !== apiKey) {
+                apiKey = newTokenValue;
+                localStorage.setItem('cms_api_key', apiKey);
+            }
+            
             Swal.fire('Berhasil', 'Konfigurasi website berhasil disimpan!', 'success');
             loadSettings();
         }
@@ -256,7 +261,7 @@ async function saveTheme() {
     Swal.fire({ title: 'Menyimpan Tema...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/settings/update`, {
+        const res = await fetch(`${BASE_API_URL}/api/settings/update`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -284,7 +289,7 @@ async function saveInstagram() {
     Swal.fire({ title: 'Menyimpan Instagram...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/settings/update`, {
+        const res = await fetch(`${BASE_API_URL}/api/settings/update`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

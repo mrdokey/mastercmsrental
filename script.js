@@ -1,11 +1,11 @@
-// CONFIG UTAMA ENGINE
-const BASE_API_URL = "http://wa.mrdsolution.my.id:5000"; 
+// CONFIG UTAMA ENGINE (ALIGNED DENGAN REVERSE PROXY NGINX VPS ANDA)
+const BASE_API_URL = "https://wa.mrdsolution.my.id/cms-api"; 
 const TENANT_ID = "cms_493_scooter";
 
 let adminWA = "6285739403193";
 let namaKlien = "493 Scooter Rentals";
 
-// HANDSHAKE UTAMA KE VPS API PORT 5000
+// HANDSHAKE UTAMA KE VPS API (LEWAT JALUR HTTPS PORT 443 NGINX)
 async function initPage() {
     try {
         const res = await fetch(`${BASE_API_URL}/api/init`, {
