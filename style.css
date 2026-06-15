@@ -73,10 +73,9 @@ nav {
     border-color: var(--dark-brown);
 }
 
-/* HERO SECTION */
+/* HERO SECTION (HOME BANNER) */
 .hero { 
     height: 380px; 
-    background: linear-gradient(rgba(62, 39, 35, 0.6), rgba(0, 0, 0, 0.8)), url('https://i.ibb.co.com/DJkj1yg/IMG-20260512-WA0038.jpg'); 
     background-size: cover; 
     background-position: center; 
     display: flex; 
@@ -90,7 +89,35 @@ nav {
 .hero h2 { font-size: 2.3rem; font-weight: 800; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
 .hero p { font-size: 1rem; color: var(--primary-yellow); font-weight: 500; margin-top: 5px; }
 
-/* CONTAINER & CORE GRID */
+/* HERO MINI (SUBPAGE HEADER - CARIUNIT / SHOWUNIT) */
+.hero-mini { 
+    padding: 70px 0 100px; 
+    background: linear-gradient(rgba(62, 39, 35, 0.7), rgba(0, 0, 0, 0.8)), url('https://i.ibb.co.com/DJkj1yg/IMG-20260512-WA0038.jpg');
+    background-size: cover; 
+    background-position: center; 
+    color: white; 
+    text-align: center;
+}
+
+/* SEARCH ENGINE BOX COMPONENT (CARIUNIT.HTML) */
+.search-box { 
+    background: white; 
+    padding: 30px; 
+    border-radius: 25px; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08); 
+    margin-top: -60px; 
+    position: relative; 
+    z-index: 10; 
+    border: 1px solid #eee; 
+}
+.form-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: var(--light-brown); }
+.form-control-lg { border-radius: 12px; font-size: 1rem; border: 1px solid #dee2e6; background-color: #fafafa; }
+.form-control-lg:focus { border-color: var(--primary-yellow); box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.1); }
+
+.btn-search { background-color: var(--dark-brown); color: var(--primary-yellow); border: none; padding: 12px; border-radius: 12px; transition: 0.3s; }
+.btn-search:hover { background-color: var(--text-dark); color: white; transform: translateY(-2px); }
+
+/* GRID CONTAINER & FLEET CARDS */
 .container { padding: 40px 15px; max-width: 1000px; margin: auto; }
 .section-title { text-align: center; margin-bottom: 30px; }
 .section-title h3 { font-size: 1.7rem; font-weight: 800; color: var(--dark-brown); }
@@ -100,8 +127,26 @@ nav {
 .fleet-card { background: #fff; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); position: relative; border: 1px solid #eee; transition: 0.3s; }
 .fleet-card:hover { transform: translateY(-5px); border-color: var(--primary-yellow); }
 
+/* CATALOG MOTOR CARD (CARIUNIT / SHOWUNIT) */
+.card-motor { border: none; border-radius: 28px; background: #fff; transition: 0.4s; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #eee; }
+.card-motor:hover { transform: translateY(-5px); border-color: var(--primary-yellow); }
+
 .img-wrapper { position: relative; height: 320px; overflow: hidden; background: #f0f0f0; }
 .img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+.status-pill { 
+    position: absolute; 
+    top: 15px; 
+    left: 15px; 
+    padding: 6px 16px; 
+    border-radius: 50px; 
+    font-size: 0.65rem; 
+    font-weight: 800; 
+    color: #fff; 
+    background-color: #198754; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+    z-index: 10;
+}
 
 .unit-info-overlay { 
     position: absolute; bottom: 0; left: 0; width: 100%; 
@@ -111,7 +156,10 @@ nav {
 .unit-brand { color: var(--primary-yellow); font-size: 0.75rem; text-transform: uppercase; font-weight: 800; margin-bottom: 5px; display: block; }
 .unit-name { font-size: 1.25rem; font-weight: 800; margin-bottom: 2px; display: block; }
 .unit-price { font-size: 0.9rem; font-weight: 600; color: #fff; opacity: 0.9; margin-bottom: 12px; display: block; }
+
 .btn-booking-slide { background: var(--primary-yellow); color: var(--dark-brown); padding: 8px 20px; border-radius: 12px; text-decoration: none; font-weight: 800; font-size: 0.8rem; display: inline-block; transition: 0.3s; }
+.btn-booking-card { background-color: var(--primary-yellow); color: var(--dark-brown); border: none; transition: 0.3s; }
+.btn-booking-card:hover { background-color: var(--dark-brown); color: #fff; }
 
 /* SERVICES GRID */
 .layanan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
