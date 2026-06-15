@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=[ID_GOOGLE_ADS]"></script> 
+    <script> 
+      window.dataLayer = window.dataLayer || []; 
+      function gtag(){dataLayer.push(arguments);} 
+      gtag('js', new Date()); 
+      gtag('config', '[ID_GOOGLE_ADS]'); 
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Dynamic Page Reader</title>
+    <link rel="icon" type="image/png" id="siteFavicon" href="">
+    
+    <meta name="theme-color" content="#3E2723">
+    
+    <!-- Integrasi Berkas Gaya Global Modular -->
+    <link rel="stylesheet" href="style.css?v=1.3">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* Desain Artikel/Aturan Pembaca Kaya Konten (Prose Layout) */
+        .content-container { background: #fff; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #eee; padding: 40px; }
+        .page-meta { font-size: 0.8rem; font-weight: 700; color: var(--light-brown); text-transform: uppercase; letter-spacing: 1px; }
+        .page-body-content { font-size: 1.05rem; color: #444; line-height: 1.8; margin-top: 25px; }
+        .page-body-content h1, .page-body-content h2, .page-body-content h3 { font-weight: 800; color: var(--dark-brown); margin: 30px 0 15px; }
+        .page-body-content p { margin-bottom: 20px; }
+        .page-body-content ul, .page-body-content ol { padding-left: 20px; margin-bottom: 20px; }
+        
+        a { text-decoration: none; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif !important; }
+    </style>
+</head>
+<body class="lang-en">
+
+<nav>
+    <a href="index.html" class="logo">
+        <img id="siteLogo" src="" alt="Logo">
+        <span id="siteTitleNav">Scooter <b>Rentals</b></span>
+    </a>
+    
+    <ul class="nav-links-desktop" id="desktopNav"></ul>
+
+    <button class="burger-btn" onclick="toggleDrawer(true)">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <button class="lang-btn" onclick="toggleLang()" style="margin-left: 15px;">EN | ID</button>
+</nav>
+
+<!-- Mobile Drawer Overlay Menu -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+    <button class="close-drawer" onclick="toggleDrawer(false)">&times;</button>
+    <div id="drawerLinks"></div>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-grow" style="color: var(--primary-yellow);"></div>
+                <p class="mt-3 fw-bold text-muted id">Memuat isi halaman...</p>
+                <p class="mt-3 fw-bold text-muted en">Loading content...</p>
+            </div>
+
+            <div id="error404" class="text-center py-5" style="display: none;">
+                <div class="display-1 text-danger mb-3"><i class="fas fa-exclamation-triangle"></i></div>
+                <h2 class="h3 fw-bold text-dark id">Halaman Tidak Ditemukan</h2>
+                <h2 class="h3 fw-bold text-dark en">Page Not Found</h2>
+                <p class="text-muted mt-2 id">Maaf, halaman kustom atau artikel yang Anda cari tidak tersedia.</p>
+                <p class="text-muted mt-2 en">Sorry, the custom page or article you are looking for is unavailable.</p>
+                <a href="index.html" class="btn btn-primary mt-4 rounded-pill px-4 py-2 font-bold id" style="background: var(--dark-brown); border: none;">Kembali ke Beranda</a>
+                <a href="index.html" class="btn btn-primary mt-4 rounded-pill px-4 py-2 font-bold en" style="background: var(--dark-brown); border: none;">Back to Home</a>
+            </div>
+
+            <!-- AREA HIDRASI DATA KONTEN (TAMPIL JIKA DATA COCOK) -->
+            <article id="contentArea" class="content-container" style="display: none;">
+                <div class="page-meta" id="contentMeta">Page</div>
+                <h1 class="display-5 fw-bold text-dark mt-2 mb-3" id="contentTitle">Loading Title...</h1>
+                <div class="underline" style="margin: 0 0 30px 0;"></div>
+                
+                <div class="page-body-content" id="contentBody">
+                    <!-- HTML Markup disuntik di sini -->
+                </div>
+            </article>
+
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>© 2026 <span id="siteFooterName"></span> | <span class="id">Didukung oleh</span><span class="en">Powered by</span> MRD Digital Solution</p>
+    <p class="address" id="siteFooterAddress"></p>
+</footer>
+
+<div class="floating-nav" id="mobileNav">
+    <a href="index.html" class="nav-item">
+        <i class="fas fa-home"></i> <span>Home</span>
+    </a>
+    <a href="index.html#layanan" class="nav-item">
+        <i class="fas fa-hand-holding-heart"></i> <span class="id">Layanan</span><span class="en">Services</span>
+    </a>
+    <a href="showunit.html" class="nav-item">
+        <i class="fas fa-list-ul"></i> <span class="id">Armada</span><span class="en">Fleet</span>
+    </a>
+    <a href="cariunit.html" class="nav-item" id="mobileCekUnitLink">
+        <i class="fas fa-calendar-check"></i> <span class="id">Cek Unit</span><span class="en">Check</span>
+    </a>
+    <a href="" target="_blank" class="nav-item" id="floatingWaLink">
+        <i class="fab fa-whatsapp"></i> <span>WhatsApp</span>
+    </a>
+</div>
+
+<script>
+    const BASE_API_URL = "https://wa.mrdsolution.my.id/cms-api"; 
+    const TENANT_ID = "cms_493_scooter";
+
+    let adminNumber = "6285739403193";
+    let namaKlien = "493 Scooter Rentals";
+
+    // HANDSHAKE UTAMA
+    async function initPage() {
+        try {
+            const res = await fetch(`${BASE_API_URL}/api/settings`, {
+                headers: { 'X-Tenant-ID': TENANT_ID }
+            });
+            const responseData = await res.json();
+            
+            if (responseData.status === "success") {
+                const settings = {};
+                responseData.data.forEach(item => {
+                    settings[item.setting_key] = item.setting_value;
+                });
+
+                const root = document.documentElement;
+                root.style.setProperty('--primary-yellow', settings.primary_color || '#FFD700');
+                root.style.setProperty('--dark-brown', settings.secondary_color || '#3E2723');
+                root.style.setProperty('--bg-page', settings.bg_color || '#fdfaf5');
+                root.style.setProperty('--text-dark', settings.text_color || '#2C1B18');
+
+                adminNumber = settings.whatsapp_number || "6285739403193";
+                namaKlien = settings.site_name || "493 Scooter Rentals";
+
+                const logoUrl = settings.logo_url || "https://i.ibb.co.com/RT54HDDv/1000147993.png";
+                document.getElementById('siteFavicon').href = settings.favicon_url || logoUrl;
+                document.getElementById('siteLogo').src = logoUrl;
+                document.getElementById('siteTitleNav').innerHTML = `${namaKlien.split(' ')[0]} <b>${namaKlien.split(' ').slice(1).join(' ')}</b>`;
+                document.getElementById('siteFooterName').innerText = namaKlien;
+                document.getElementById('siteFooterAddress').innerText = settings.address || "Jl. Nakula Gg. Baik-Baik No.1, Seminyak, Bali";
+                document.getElementById('floatingWaLink').href = `https://wa.me/${adminNumber}`;
+
+                let navigationMenu = [];
+                try {
+                    navigationMenu = JSON.parse(settings.navigation_menu || "[]");
+                } catch (e) {}
+                renderNavigation(navigationMenu, settings.cari_unit_active || "1");
+
+                // SELESAI CONFIG, PROSES LOAD ISI DETIL HALAMAN / ARTIKEL
+                loadDynamicContent();
+            }
+        } catch (err) {
+            console.warn("[Reader Frame] Gagal memproses setelan dasar.", err);
+        }
+    }
+
+    // LOGIKA PENYARING DATA HALAMAN ATAU ARTIKEL (SMART ROUTER)
+    async function loadDynamicContent() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const type = urlParams.get('type'); // 'page' atau 'post'
+        const slug = urlParams.get('slug'); // teks slug artikel/halaman
+
+        if (!type || !slug) {
+            show404();
+            return;
+        }
+
+        try {
+            // Tembak endpoint VPS dinamis sesuai tipe data
+            const endpoint = (type === "page") ? "pages" : "posts";
+            const res = await fetch(`${BASE_API_URL}/api/${endpoint}`, {
+                headers: { 'X-Tenant-ID': TENANT_ID }
+            });
+            const json = await res.json();
+
+            if (json.status === "success" && json.data.length > 0) {
+                // Cari objek baris yang memiliki nilai slug sama persis
+                const activeItem = json.data.find(item => item.slug === slug);
+
+                if (activeItem) {
+                    renderContentHTML(type, activeItem);
+                    return;
+                }
+            }
+            show404();
+        } catch (error) {
+            console.error("Gagal memuat isi dokumen.", error);
+            show404();
+        }
+    }
+
+    function renderContentHTML(type, item) {
+        document.getElementById('loading').style.display = "none";
+        document.getElementById('contentArea').style.display = "block";
+
+        const metaEl = document.getElementById('contentMeta');
+        metaEl.innerText = (type === "page") ? "Custom Page" : "Article / Promo";
+        
+        document.getElementById('contentTitle').innerText = item.title;
+        document.getElementById('contentBody').innerHTML = item.content;
+        
+        // Ganti title tab dokumen di browser secara dinamis
+        document.title = `${item.title} | ${namaKlien}`;
+    }
+
+    function show404() {
+        document.getElementById('loading').style.display = "none";
+        document.getElementById('contentArea').style.display = "none";
+        document.getElementById('error404').style.display = "block";
+    }
+
+    function renderNavigation(menus, cariUnitActive) {
+        const desktopNav = document.getElementById('desktopNav');
+        const drawerLinks = document.getElementById('drawerLinks');
+        
+        if (!desktopNav || !drawerLinks) return;
+        desktopNav.innerHTML = "";
+        drawerLinks.innerHTML = "";
+
+        menus.sort((a, b) => Number(a.order_num || 0) - Number(b.order_num || 0));
+
+        menus.forEach(menu => {
+            const itemHtml = `
+                <a onclick="slowScroll('${menu.target_url}')">
+                    <span class="id">${menu.title_id}</span>
+                    <span class="en">${menu.title_en}</span>
+                </a>
+            `;
+            desktopNav.innerHTML += `<li>${itemHtml}</li>`;
+            drawerLinks.innerHTML += itemHtml;
+        });
+
+        if (cariUnitActive === "1") {
+            const cekUnitHtml = `
+                <a href="cariunit.html">
+                    <span class="id">Cek Unit</span>
+                    <span class="en">Check Unit</span>
+                </a>
+            `;
+            desktopNav.innerHTML += `<li>${cekUnitHtml}</li>`;
+            drawerLinks.innerHTML += cekUnitHtml;
+            
+            const mobileCekBtn = document.getElementById('mobileCekUnitLink');
+            if (mobileCekBtn) {
+                mobileCekBtn.style.setProperty('display', 'block', 'important');
+            }
+        } else {
+            const mobileCekBtn = document.getElementById('mobileCekUnitLink');
+            if (mobileCekBtn) {
+                mobileCekBtn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+
+    function toggleDrawer(open) {
+        const drawer = document.getElementById('mobileDrawer');
+        const backdrop = document.getElementById('drawerBackdrop');
+        if (open) {
+            drawer.classList.add('active');
+            backdrop.classList.add('active');
+        } else {
+            drawer.classList.remove('active');
+            backdrop.classList.remove('active');
+        }
+    }
+
+    function toggleLang() {
+        document.body.classList.toggle('lang-en');
+        document.body.classList.toggle('lang-id');
+        
+        const btn = document.querySelector('.lang-btn');
+        if (document.body.classList.contains('lang-en')) {
+            btn.innerHTML = "EN | ID";
+        } else {
+            btn.innerHTML = "ID | EN";
+        }
+    }
+
+    function slowScroll(target) {
+        toggleDrawer(false);
+        if (target.startsWith("#")) {
+            window.location.href = `index.html${target}`;
+        } else {
+            window.location.href = target;
+        }
+    }
+
+    initPage();
+</script>
+</body>
+</html>

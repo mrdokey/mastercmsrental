@@ -1,19 +1,25 @@
+/**
+ * UNIVERSAL MULTI-TENANT ADMIN ENGINE (PRODUCTION READY)
+ * Mendukung Full CRUD Dinamis dengan Fitur Salin Tautan Cepat (Copy Link to Clipboard)
+ * Port API: HTTPS (Port 443 SSL Nginx)
+ */
+
 const BASE_API_URL = "https://wa.mrdsolution.my.id/cms-api";
 
 let tenantId = "";
 let apiKey = "";
 
-// CREDENTIALS INTEGRASI CLOUDINARY UNTUK INLINE UPLOADER
+// INTEGRASI CLOUDINARY UNTUK INLINE UPLOADER
 const CLOUDINARY_CLOUD_NAME = "dnobafum2";
 const CLOUDINARY_PRESET = "cms_rental";
 
 let activeInlineTargetId = "";
 
-// STATE PENAMPUNG DATA JSON DARI DATABASE
+// STATE PENAMPUNG DATA KONTEN DARI DATABASE (MYSQL)
 let localNavigation = [];
 let localTestimonials = [];
 let localGallery = [];
-let localSliders = []; // State Baru untuk Banner Slider Depan
+let localSliders = [];
 
 window.onload = function() {
     const savedTenant = localStorage.getItem('cms_tenant_id');
@@ -27,6 +33,27 @@ window.onload = function() {
         document.getElementById('currentTenantName').innerText = tenantId;
         loadSettings();
     }
+}
+
+// ------------------------------------------------------------
+// UTILITY: SAKTI COPY LINK TO CLIPBOARD (TOMBOL SALIN TAUTAN)
+// ------------------------------------------------------------
+function copyToClipboard(text) {
+    const tempInput = document.createElement("input");
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    tempInput.setSelectionRange(0, 99999); // Mendukung browser seluler/tablet
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+    
+    Swal.fire({
+        title: 'Tautan Disalin!',
+        text: 'Anda dapat menempelkan (paste) tautan ini ke menu target navigasi.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+    });
 }
 
 async function handleLogin() {
@@ -72,16 +99,12 @@ async function handleLogin() {
 
 async function loadSettings() {
     try {
-        const res = await fetch(`${BASE_API_URL}/api/settings`, {
+        const res = await fetch(`${BASE_API_URL}/api/init`, {
             headers: { 'X-Tenant-ID': tenantId }
         });
-        const responseData = await res.json();
-        if (responseData.status === "success") {
-            // Konversi array database ke key-value object
-            const settings = {};
-            responseData.data.forEach(item => {
-                settings[item.setting_key] = item.setting_value;
-            });
+        const data = await res.json();
+        if (data.status === "success") {
+            const settings = data.settings;
             
             const form = document.getElementById('settingsForm');
             form.site_name.value = settings.site_name || "";
@@ -93,29 +116,22 @@ async function loadSettings() {
             form.address.value = settings.address || "";
             form.google_maps_embed.value = settings.google_maps_embed || "";
 
-            // Isi nilai input token admin kustom
             document.getElementById('adminTokenField').value = settings.admin_token || apiKey;
-
-            // SINKRONISASI NILAI STATUS SAKELAR CARI UNIT (1 / 0)
             document.getElementById('cariUnitActiveField').value = settings.cari_unit_active || "1";
 
-            // Isi nilai input form Tema Warna
             document.getElementById('primaryHexText').value = settings.primary_color || "#FFD700";
             document.getElementById('secondaryHexText').value = settings.secondary_color || "#3E2723";
             document.getElementById('bgHexText').value = settings.bg_color || "#fdfaf5";
             document.getElementById('textHexText').value = settings.text_color || "#2C1B18";
             
-            // Isi nilai input Instagram
             document.getElementById('instagramActiveField').value = settings.instagram_active || "0";
             document.getElementById('instagramUserField').value = settings.instagram_username || "";
 
-            // Parse Array JSON secara aman (WordPress-Like)
             try { localNavigation = JSON.parse(settings.navigation_menu || "[]"); } catch (e) { localNavigation = []; }
             try { localTestimonials = JSON.parse(settings.site_testimonials || "[]"); } catch (e) { localTestimonials = []; }
             try { localGallery = JSON.parse(settings.site_gallery || "[]"); } catch (e) { localGallery = []; }
             try { localSliders = JSON.parse(settings.site_sliders || "[]"); } catch (e) { localSliders = []; }
 
-            // Tampilkan Pratinjau Gambar Dinamis (Jika URL tersedia)
             updateImagePreview('logoUrlField', settings.logo_url);
             updateImagePreview('faviconUrlField', settings.favicon_url);
 
@@ -126,13 +142,11 @@ async function loadSettings() {
     }
 }
 
-// FUNGSI UTILITY INLINE FILE SELECTOR
 function triggerInlineUpload(targetFieldId) {
     activeInlineTargetId = targetFieldId;
     document.getElementById('inlineCloudinaryFile').click();
 }
 
-// SMART INLINE IMAGE UPLOADER HANDLER (DIRECT CLOUDINARY UNSIGNED UPLOAD API)
 async function handleInlineImageUpload() {
     const fileInput = document.getElementById('inlineCloudinaryFile');
     if (!fileInput.files || fileInput.files.length === 0) return;
@@ -203,7 +217,6 @@ function updateImagePreview(fieldId, url) {
     }
 }
 
-// COLOR PICKER SYNC
 const pickerMap = [
     { picker: 'primaryColorInput', text: 'primaryHexText' },
     { picker: 'secondaryColorInput', text: 'secondaryHexText' },
@@ -233,9 +246,6 @@ function applyPreset(p, s, b, t) {
     Swal.fire({ title: 'Preset Diisi!', text: 'Klik "Terapkan Palet Warna" untuk menyimpan.', icon: 'info', timer: 1500, showConfirmButton: false });
 }
 
-// ------------------------------------------------------------
-// GLOBAL SAVE METHOD KE VPS ENDPOINT AMAN
-// ------------------------------------------------------------
 async function executeUpdateSettings(payload) {
     try {
         const res = await fetch(`${BASE_API_URL}/api/settings/update`, {
@@ -289,12 +299,16 @@ async function saveSettings() {
 }
 
 async function saveTheme() {
-    const form = document.getElementById('themeForm');
+    const primaryColor = document.getElementById('primaryHexText').value.trim();
+    const secondaryColor = document.getElementById('secondaryHexText').value.trim();
+    const bgColor = document.getElementById('bgHexText').value.trim();
+    const textColor = document.getElementById('textHexText').value.trim();
+
     const payload = [
-        { key: 'primary_color', value: form.primary_color.value },
-        { key: 'secondary_color', value: form.secondary_color.value },
-        { key: 'bg_color', value: form.bg_color.value },
-        { key: 'text_color', value: form.text_color.value }
+        { key: 'primary_color', value: primaryColor },
+        { key: 'secondary_color', value: secondaryColor },
+        { key: 'bg_color', value: bgColor },
+        { key: 'text_color', value: textColor }
     ];
 
     Swal.fire({ title: 'Menyimpan Tema...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -304,7 +318,7 @@ async function saveTheme() {
         Swal.fire('Berhasil', 'Skema warna tema berhasil diterapkan!', 'success');
         loadSettings();
     } else {
-        Swal.fire('Error', 'Gagal memproses tema ke server.', 'error');
+        Swal.fire('Error', 'Gagal memproses warna ke server.', 'error');
     }
 }
 
@@ -325,14 +339,31 @@ async function saveInstagram() {
     }
 }
 
+async function executeSaveSerializedJSON(dbKey, localArray, successMessage, reloadCallback) {
+    Swal.fire({ title: 'Menyimpan ke VPS...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    const payload = [
+        { key: dbKey, value: JSON.stringify(localArray) }
+    ];
+
+    const success = await executeUpdateSettings(payload);
+    Swal.close();
+    
+    if (success) {
+        Swal.fire({ title: 'Sukses!', text: successMessage, icon: 'success', timer: 1500, showConfirmButton: false });
+        reloadCallback();
+    } else {
+        Swal.fire('Gagal', 'Terjadi gangguan saat menyimpan ke database MySQL VPS.', 'error');
+    }
+}
+
 // ------------------------------------------------------------
-// SMART CRUD 1: MENU NAVIGASI (WordPress-Like Key-Value Storage)
+// CRUD 1: MANAJEMEN MENU NAVIGASI WEBSITE
 // ------------------------------------------------------------
 function loadNavigationTable() {
     const container = document.getElementById('navigationTableBody');
     container.innerHTML = "";
 
-    // Urutkan navigasi secara berurutan
     localNavigation.sort((a, b) => Number(a.order_num || 0) - Number(b.order_num || 0));
 
     if (localNavigation.length > 0) {
@@ -427,7 +458,7 @@ function deleteNavigation(index) {
 }
 
 // ------------------------------------------------------------
-// SMART CRUD 2: MANAJEMEN SLIDER BANNER (WordPress-Like Key-Value Storage)
+// CRUD 2: MANAJEMEN SLIDER BANNER (WordPress-Like Key-Value Storage)
 // ------------------------------------------------------------
 function loadSliders() {
     const container = document.getElementById('slidersGridContainer');
@@ -537,7 +568,7 @@ function deleteSlider(index) {
 }
 
 // ------------------------------------------------------------
-// SMART CRUD 3: TESTIMONI PELANGGAN (WordPress-Like Key-Value Storage)
+// CRUD 3: TESTIMONI PELANGGAN (WordPress-Like Key-Value Storage)
 // ------------------------------------------------------------
 function loadTestimonials() {
     const container = document.getElementById('testimonialsGridContainer');
@@ -665,7 +696,7 @@ function deleteTestimonial(index) {
 }
 
 // ------------------------------------------------------------
-// SMART CRUD 4: GALERI ALBUM FOTO (WordPress-Like Key-Value Storage)
+// CRUD 4: GALERI ALBUM FOTO (WordPress-Like Key-Value Storage)
 // ------------------------------------------------------------
 function loadGalleries() {
     const container = document.getElementById('galleriesGridContainer');
@@ -754,7 +785,7 @@ async function openGalleryModal(indexToEdit = null) {
             localGallery.push(formValues);
         }
 
-        executeSaveSerializedJSON('site_gallery', localGallery, 'Foto berhasil ditambahkan ke Galeri Album.', loadGalleries);
+        executeSaveSerializedJSON('site_gallery', localGallery, 'Foto berhasil dihapus dari album.', loadGalleries);
     }
 }
 
@@ -799,6 +830,7 @@ async function executeSaveSerializedJSON(dbKey, localArray, successMessage, relo
     }
 }
 
+// SINKRONISASI CO-EXISTENCE KEDUA TAB KLIEN SECARA TOTAL
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('bg-indigo-800'));
