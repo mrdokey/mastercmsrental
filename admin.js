@@ -1,25 +1,21 @@
-/**
- * UNIVERSAL MULTI-TENANT ADMIN ENGINE (PRODUCTION READY)
- * Mendukung Full CRUD Dinamis dengan Fitur Salin Tautan Cepat (Copy Link to Clipboard)
- * Port API: HTTPS (Port 443 SSL Nginx)
- */
-
 const BASE_API_URL = "https://wa.mrdsolution.my.id/cms-api";
 
 let tenantId = "";
 let apiKey = "";
 
-// INTEGRASI CLOUDINARY UNTUK INLINE UPLOADER
+// CREDENTIALS CLOUDINARY UNTUK INLINE UPLOADER
 const CLOUDINARY_CLOUD_NAME = "dnobafum2";
 const CLOUDINARY_PRESET = "cms_rental";
 
 let activeInlineTargetId = "";
 
-// STATE PENAMPUNG DATA KONTEN DARI DATABASE (MYSQL)
+// STATE PENAMPUNG DATA JSON DARI DATABASE
 let localNavigation = [];
 let localTestimonials = [];
 let localGallery = [];
 let localSliders = [];
+let localPages = []; // State Baru untuk Halaman ToS/FAQ
+let localPosts = []; // State Baru untuk Artikel & Promo
 
 window.onload = function() {
     const savedTenant = localStorage.getItem('cms_tenant_id');
@@ -36,22 +32,22 @@ window.onload = function() {
 }
 
 // ------------------------------------------------------------
-// UTILITY: SAKTI COPY LINK TO CLIPBOARD (TOMBOL SALIN TAUTAN)
+// UTILITY: COPY TO CLIPBOARD (TOMBOL SALIN TAUTAN COPIER)
 // ------------------------------------------------------------
 function copyToClipboard(text) {
     const tempInput = document.createElement("input");
     tempInput.value = text;
     document.body.appendChild(tempInput);
     tempInput.select();
-    tempInput.setSelectionRange(0, 99999); // Mendukung browser seluler/tablet
+    tempInput.setSelectionRange(0, 99999);
     document.execCommand("copy");
     document.body.removeChild(tempInput);
     
     Swal.fire({
         title: 'Tautan Disalin!',
-        text: 'Anda dapat menempelkan (paste) tautan ini ke menu target navigasi.',
+        text: 'Silakan tempel (paste) tautan ini ke kolom target Menu Navigasi.',
         icon: 'success',
-        timer: 2000,
+        timer: 1800,
         showConfirmButton: false
     });
 }
@@ -99,12 +95,15 @@ async function handleLogin() {
 
 async function loadSettings() {
     try {
-        const res = await fetch(`${BASE_API_URL}/api/init`, {
+        const res = await fetch(`${BASE_API_URL}/api/settings`, {
             headers: { 'X-Tenant-ID': tenantId }
         });
-        const data = await res.json();
-        if (data.status === "success") {
-            const settings = data.settings;
+        const responseData = await res.json();
+        if (responseData.status === "success") {
+            const settings = {};
+            responseData.data.forEach(item => {
+                settings[item.setting_key] = item.setting_value;
+            });
             
             const form = document.getElementById('settingsForm');
             form.site_name.value = settings.site_name || "";
@@ -116,22 +115,31 @@ async function loadSettings() {
             form.address.value = settings.address || "";
             form.google_maps_embed.value = settings.google_maps_embed || "";
 
+            // Isi nilai input token admin kustom
             document.getElementById('adminTokenField').value = settings.admin_token || apiKey;
+
+            // SINKRONISASI NILAI STATUS SAKELAR CARI UNIT (1 / 0)
             document.getElementById('cariUnitActiveField').value = settings.cari_unit_active || "1";
 
+            // Isi nilai input form Tema Warna
             document.getElementById('primaryHexText').value = settings.primary_color || "#FFD700";
             document.getElementById('secondaryHexText').value = settings.secondary_color || "#3E2723";
             document.getElementById('bgHexText').value = settings.bg_color || "#fdfaf5";
             document.getElementById('textHexText').value = settings.text_color || "#2C1B18";
             
+            // Isi nilai input Instagram
             document.getElementById('instagramActiveField').value = settings.instagram_active || "0";
             document.getElementById('instagramUserField').value = settings.instagram_username || "";
 
+            // Parse Array JSON secara aman (WordPress-Like)
             try { localNavigation = JSON.parse(settings.navigation_menu || "[]"); } catch (e) { localNavigation = []; }
             try { localTestimonials = JSON.parse(settings.site_testimonials || "[]"); } catch (e) { localTestimonials = []; }
             try { localGallery = JSON.parse(settings.site_gallery || "[]"); } catch (e) { localGallery = []; }
             try { localSliders = JSON.parse(settings.site_sliders || "[]"); } catch (e) { localSliders = []; }
+            try { localPages = JSON.parse(settings.site_pages || "[]"); } catch (e) { localPages = []; }
+            try { localPosts = JSON.parse(settings.site_posts || "[]"); } catch (e) { localPosts = []; }
 
+            // Tampilkan Pratinjau Gambar Dinamis (Jika URL tersedia)
             updateImagePreview('logoUrlField', settings.logo_url);
             updateImagePreview('faviconUrlField', settings.favicon_url);
 
@@ -142,11 +150,13 @@ async function loadSettings() {
     }
 }
 
+// FUNGSI UTILITY INLINE FILE SELECTOR
 function triggerInlineUpload(targetFieldId) {
     activeInlineTargetId = targetFieldId;
     document.getElementById('inlineCloudinaryFile').click();
 }
 
+// SMART INLINE IMAGE UPLOADER HANDLER (DIRECT CLOUDINARY UNSIGNED UPLOAD API)
 async function handleInlineImageUpload() {
     const fileInput = document.getElementById('inlineCloudinaryFile');
     if (!fileInput.files || fileInput.files.length === 0) return;
@@ -246,6 +256,9 @@ function applyPreset(p, s, b, t) {
     Swal.fire({ title: 'Preset Diisi!', text: 'Klik "Terapkan Palet Warna" untuk menyimpan.', icon: 'info', timer: 1500, showConfirmButton: false });
 }
 
+// ------------------------------------------------------------
+// GLOBAL SAVE METHOD KE VPS ENDPOINT AMAN
+// ------------------------------------------------------------
 async function executeUpdateSettings(payload) {
     try {
         const res = await fetch(`${BASE_API_URL}/api/settings/update`, {
@@ -568,7 +581,198 @@ function deleteSlider(index) {
 }
 
 // ------------------------------------------------------------
-// CRUD 3: TESTIMONI PELANGGAN (WordPress-Like Key-Value Storage)
+// CRUD 3: ARTIKEL BERITA & PROMO
+// ------------------------------------------------------------
+function loadPosts() {
+    const container = document.getElementById('postsGridContainer');
+    container.innerHTML = "";
+
+    if (localPosts.length > 0) {
+        localPosts.forEach((item, index) => {
+            const pageLink = `detail.html?type=post&slug=${item.slug}`;
+            container.innerHTML += `
+                <div class="bg-white border p-5 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition">
+                    <div>
+                        <h4 class="text-md font-bold text-gray-900 mb-1">${item.title}</h4>
+                        <p class="text-xs font-semibold text-indigo-600 font-mono mb-2">Slug: /posts/${item.slug}</p>
+                        <div class="text-xs text-gray-500 line-clamp-3">${item.content.replace(/<[^>]*>/g, '')}</div>
+                    </div>
+                    <div class="mt-4 border-t pt-3 flex flex-wrap justify-between items-center gap-2">
+                        <button onclick="copyToClipboard('${pageLink}')" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-xl text-xs font-bold hover:bg-indigo-100 transition"><i class="fas fa-copy me-1"></i> Salin Tautan</button>
+                        <div class="flex gap-2">
+                            <button onclick="editPost(${index})" class="text-gray-600 hover:text-gray-900 text-xs font-bold"><i class="fas fa-edit"></i> Edit</button>
+                            <button onclick="deletePost(${index})" class="text-red-600 hover:text-red-900 text-xs font-bold"><i class="fas fa-trash-alt"></i> Hapus</button>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    } else {
+        container.innerHTML = `<div class="col-span-2 text-center py-10 text-gray-400 font-semibold">Belum ada artikel berita atau promo klien.</div>`;
+    }
+}
+
+async function openPostModal(indexToEdit = null) {
+    const isEdit = indexToEdit !== null;
+    const currentItem = isEdit ? localPosts[indexToEdit] : { title: "", slug: "", content: "" };
+
+    const { value: formValues } = await Swal.fire({
+        title: isEdit ? 'Edit Artikel Promo' : 'Buat Artikel Baru',
+        html: `
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Judul Artikel</label>
+                    <input id="post-title" class="swal2-input w-full m-0 rounded-xl" placeholder="Promo Hemat Sewa Vespa 3 Hari" value="${currentItem.title}">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Slug URL (Gunakan Tanda Hubung - Tanpa Spasi)</label>
+                    <input id="post-slug" class="swal2-input w-full m-0 rounded-xl font-mono text-sm" placeholder="promo-hemat-vespa" value="${currentItem.slug}">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Konten / Isi Artikel (HTML/Plain Text)</label>
+                    <textarea id="post-content" class="swal2-textarea w-full m-0 rounded-xl border border-gray-200 p-3 h-32 font-mono text-sm" placeholder="Tulis isi pengumuman/promo di sini...">${currentItem.content}</textarea>
+                </div>
+            </div>`,
+        focusConfirm: false,
+        preConfirm: () => {
+            return {
+                title: document.getElementById('post-title').value.trim(),
+                slug: document.getElementById('post-slug').value.trim(),
+                content: document.getElementById('post-content').value.trim()
+            }
+        }
+    });
+
+    if (formValues) {
+        if (!formValues.title || !formValues.slug || !formValues.content) {
+            Swal.fire('Gagal', 'Lengkapi seluruh isi artikel.', 'warning');
+            return;
+        }
+
+        if (isEdit) {
+            localPosts[indexToEdit] = formValues;
+        } else {
+            localPosts.push(formValues);
+        }
+
+        executeSaveSerializedJSON('site_posts', localPosts, 'Artikel berhasil diterbitkan.', loadPosts);
+    }
+}
+
+function editPost(index) {
+    openPostModal(index);
+}
+
+function deletePost(index) {
+    Swal.fire({
+        title: 'Hapus Artikel?',
+        text: "Artikel terpilih akan dihapus permanen.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Ya, hapus!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localPosts.splice(index, 1);
+            executeSaveSerializedJSON('site_posts', localPosts, 'Artikel berhasil dihapus.', loadPosts);
+        }
+    });
+}
+
+// ------------------------------------------------------------
+// CRUD 4: MANAJEMEN HALAMAN KUSTOM ToS/FAQ
+// ------------------------------------------------------------
+function loadPages() {
+    const container = document.getElementById('pagesTableBody');
+    container.innerHTML = "";
+
+    if (localPages.length > 0) {
+        localPages.forEach((item, index) => {
+            const pageLink = `detail.html?type=page&slug=${item.slug}`;
+            container.innerHTML += `
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-6 py-4 font-bold text-gray-900">${item.title}</td>
+                    <td class="px-6 py-4 font-mono text-xs text-indigo-600">/pages/${item.slug}</td>
+                    <td class="px-6 py-4 text-center space-x-3">
+                        <button onclick="copyToClipboard('${pageLink}')" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-xl text-xs font-bold hover:bg-indigo-100 transition"><i class="fas fa-copy me-1"></i> Salin Tautan</button>
+                        <button onclick="editPage(${index})" class="text-gray-600 hover:text-gray-900 text-xs font-bold"><i class="fas fa-edit"></i> Edit</button>
+                        <button onclick="deletePage(${index})" class="text-red-600 hover:text-red-900 text-xs font-bold"><i class="fas fa-trash-alt"></i> Hapus</button>
+                    </td>
+                </tr>`;
+        });
+    } else {
+        container.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-gray-400">Belum ada halaman kustom (ToS/FAQ) dibuat.</td></tr>`;
+    }
+}
+
+async function openPageModal(indexToEdit = null) {
+    const isEdit = indexToEdit !== null;
+    const currentItem = isEdit ? localPages[indexToEdit] : { title: "", slug: "", content: "" };
+
+    const { value: formValues } = await Swal.fire({
+        title: isEdit ? 'Edit Halaman Kustom' : 'Buat Halaman Baru',
+        html: `
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Judul Halaman</label>
+                    <input id="page-title" class="swal2-input w-full m-0 rounded-xl" placeholder="Syarat & Ketentuan Sewa Motor" value="${currentItem.title}">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Slug URL Halaman (Tanpa Spasi)</label>
+                    <input id="page-slug" class="swal2-input w-full m-0 rounded-xl font-mono text-sm" placeholder="syarat-dan-ketentuan" value="${currentItem.slug}">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Konten Halaman (HTML/Plain Text)</label>
+                    <textarea id="page-content" class="swal2-textarea w-full m-0 rounded-xl border border-gray-200 p-3 h-48 font-mono text-sm" placeholder="<p>Tulis markup halaman di sini...</p>">${currentItem.content}</textarea>
+                </div>
+            </div>`,
+        focusConfirm: false,
+        preConfirm: () => {
+            return {
+                title: document.getElementById('page-title').value.trim(),
+                slug: document.getElementById('page-slug').value.trim(),
+                content: document.getElementById('page-content').value.trim()
+            }
+        }
+    });
+
+    if (formValues) {
+        if (!formValues.title || !formValues.slug || !formValues.content) {
+            Swal.fire('Gagal', 'Semua kolom input wajib diisi.', 'warning');
+            return;
+        }
+
+        if (isEdit) {
+            localPages[indexToEdit] = formValues;
+        } else {
+            localPages.push(formValues);
+        }
+
+        executeSaveSerializedJSON('site_pages', localPages, 'Halaman kustom berhasil disimpan.', loadPages);
+    }
+}
+
+function editPage(index) {
+    openPageModal(index);
+}
+
+function deletePage(index) {
+    Swal.fire({
+        title: 'Hapus Halaman?',
+        text: "Halaman ini akan hilang secara permanen dari server.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Ya, hapus!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localPages.splice(index, 1);
+            executeSaveSerializedJSON('site_pages', localPages, 'Halaman kustom berhasil dihapus.', loadPages);
+        }
+    });
+}
+
+// ------------------------------------------------------------
+// CRUD 5: TESTIMONI PELANGGAN (WordPress-Like Key-Value Storage)
 // ------------------------------------------------------------
 function loadTestimonials() {
     const container = document.getElementById('testimonialsGridContainer');
@@ -696,7 +900,7 @@ function deleteTestimonial(index) {
 }
 
 // ------------------------------------------------------------
-// CRUD 4: GALERI ALBUM FOTO (WordPress-Like Key-Value Storage)
+// CRUD 6: GALERI ALBUM FOTO (WordPress-Like Key-Value Storage)
 // ------------------------------------------------------------
 function loadGalleries() {
     const container = document.getElementById('galleriesGridContainer');
@@ -830,7 +1034,6 @@ async function executeSaveSerializedJSON(dbKey, localArray, successMessage, relo
     }
 }
 
-// SINKRONISASI CO-EXISTENCE KEDUA TAB KLIEN SECARA TOTAL
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('bg-indigo-800'));
@@ -840,6 +1043,8 @@ function switchTab(tabId) {
 
     if (tabId === 'navigation') loadNavigationTable();
     if (tabId === 'sliders') loadSliders();
+    if (tabId === 'posts') loadPosts();
+    if (tabId === 'pages') loadPages();
     if (tabId === 'testimonials') loadTestimonials();
     if (tabId === 'galleries') loadGalleries();
 }
