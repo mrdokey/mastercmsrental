@@ -1,22 +1,26 @@
-// CONFIG UTAMA ENGINE (ALIGNED DENGAN REVERSE PROXY NGINX VPS ANDA)
+// CONFIG UTAMA FRONTEND (MENGGUNAKAN JALUR HTTPS REVERSE PROXY NGINX VPS STABIL ANDA)
 const BASE_API_URL = "https://wa.mrdsolution.my.id/cms-api"; 
 const TENANT_ID = "cms_493_scooter";
 
 let adminWA = "6285739403193";
 let namaKlien = "493 Scooter Rentals";
+let liveGasUrl = "https://script.google.com/macros/s/AKfycby-xoi9mMwmXGwy6BRrIFfJxUisjaj_n3u-G5lc6mb9tj3GMXvDs4j1GGxTh4U6sW6v/exec";
 
-// HANDSHAKE UTAMA KE VPS API (LEWAT JALUR HTTPS PORT 443 NGINX)
+// 1. INisialisasi CONFIG & TEMING DARI DATABASE MYSQL KLIEN
 async function initPage() {
     try {
-        const res = await fetch(`${BASE_API_URL}/api/init`, {
+        const res = await fetch(`${BASE_API_URL}/api/settings`, {
             headers: { 'X-Tenant-ID': TENANT_ID }
         });
-        const data = await res.json();
+        const responseData = await res.json();
         
-        if (data.status === "success") {
-            const settings = data.settings || {};
-            
-            // Suntik Variabel Warna Tema Dinamis ke CSS Root (Dengan Fallback Default)
+        if (responseData.status === "success") {
+            const settings = {};
+            responseData.data.forEach(item => {
+                settings[item.setting_key] = item.setting_value;
+            });
+
+            // Suntik Variabel Warna Tema Dinamis ke CSS Root
             const root = document.documentElement;
             root.style.setProperty('--primary-yellow', settings.primary_color || '#FFD700');
             root.style.setProperty('--dark-brown', settings.secondary_color || '#3E2723');
@@ -25,15 +29,17 @@ async function initPage() {
 
             adminWA = settings.whatsapp_number || "6285739403193";
             namaKlien = settings.site_name || "493 Scooter Rentals";
+            
+            if (settings.gas_url) {
+                liveGasUrl = settings.gas_url;
+            }
 
-            // IMPLEMENTASI NULL-SAFETY (Mencegah Crash jika data kosong)
             const siteName = settings.site_name || "493 Scooter Rentals";
             const logoUrl = settings.logo_url || "https://i.ibb.co.com/RT54HDDv/1000147993.png";
             const taglineId = settings.tagline_id || settings.tagline || "Eksplorasi Bali Lebih Mudah & Seru";
             const taglineEn = settings.tagline_en || settings.tagline || "Explore Bali Easier & More Fun";
             const addressText = settings.address || "Jl. Nakula Gg. Baik-Baik No.1, Seminyak, Bali";
 
-            // Pisahkan kata pertama secara aman untuk logo navigasi
             const firstWord = siteName.split(' ')[0] || "493";
             const restOfName = siteName.split(' ').slice(1).join(' ') || "Scooter Rentals";
 
@@ -67,18 +73,72 @@ async function initPage() {
                 document.getElementById('instagramSection').style.display = "none";
             }
 
-            // Muat Navigasi dari database secara dinamis & menyertakan parameter sakelar Cek Unit
-            if (data.navigation) {
-                renderNavigation(data.navigation, settings.cari_unit_active || "1");
+            // Parse Menu Navigasi berbasis JSON Dinamis (WordPress-Like)
+            let navigationMenu = [];
+            try {
+                navigationMenu = JSON.parse(settings.navigation_menu || "[]");
+            } catch (e) {
+                console.warn("Gagal mengurai JSON navigasi menu.", e);
+            }
+            renderNavigation(navigationMenu, settings.cari_unit_active || "1");
+
+            // Parse Banner Slider Depan (Dinamis Cloudinary)
+            let sliderBanners = [];
+            try {
+                sliderBanners = JSON.parse(settings.site_sliders || "[]");
+            } catch (e) {
+                sliderBanners = [];
+            }
+            
+            // Jalankan loop slider harian jika berkas array ada isinya
+            if (sliderBanners.length > 0) {
+                startImageSlider(sliderBanners);
             }
         }
     } catch (err) {
-        console.warn("[CMS Framework Error] Gagal merender data dinamis. Memuat fallback.", err);
+        console.warn("[CMS Framework Error] Gagal merender data dinamis VPS. Memuat fallback.", err);
     }
     loadFleet();
 }
 
-// INJEKSI DIGITAL SECARA PINTAR DAN MANDIRI
+// ------------------------------------------------------------
+// SMOOTH AUTO-SLIDER BANNER SYSTEM (3 DETIK LOOP)
+// ------------------------------------------------------------
+let sliderActiveIndex = 0;
+let sliderLoopTimer = null;
+
+function startImageSlider(slides) {
+    if (!slides || slides.length === 0) return;
+
+    const heroSection = document.getElementById('home');
+    const titleEl = document.getElementById('siteHeroTitle');
+    const taglineIdEl = document.getElementById('siteTaglineId');
+    const taglineEnEl = document.getElementById('siteTaglineEn');
+
+    function showSlide(index) {
+        const slide = slides[index];
+        
+        // Buat efek transisi fade-in background mulus secara linear
+        heroSection.style.transition = "background-image 0.8s ease-in-out";
+        heroSection.style.backgroundImage = `linear-gradient(rgba(62, 39, 35, 0.6), rgba(0, 0, 0, 0.8)), url('${slide.image_url}')`;
+        
+        // Suntik teks kustom khusus jika diisi di panel admin slide tersebut, jika kosong fallback ke namaKlien
+        titleEl.innerText = slide.title || namaKlien;
+        taglineIdEl.innerText = slide.subtitle_id || "";
+        taglineEnEl.innerText = slide.subtitle_en || "";
+    }
+
+    // Tampilkan slide ke-1 di awal
+    showSlide(sliderActiveIndex);
+
+    // Jalankan timer loop per 3 detik
+    if (sliderLoopTimer) clearInterval(sliderLoopTimer);
+    sliderLoopTimer = setInterval(() => {
+        sliderActiveIndex = (sliderActiveIndex + 1) % slides.length;
+        showSlide(sliderActiveIndex);
+    }, 3000);
+}
+
 function renderNavigation(menus, cariUnitActive) {
     const desktopNav = document.getElementById('desktopNav');
     const drawerLinks = document.getElementById('drawerLinks');
@@ -88,7 +148,9 @@ function renderNavigation(menus, cariUnitActive) {
     desktopNav.innerHTML = "";
     drawerLinks.innerHTML = "";
 
-    // 1. Render Menu Navigasi Standar dari Database MySQL
+    // Urutkan menu navigasi berdasarkan order_num secara numerik
+    menus.sort((a, b) => Number(a.order_num || 0) - Number(b.order_num || 0));
+
     menus.forEach(menu => {
         const itemHtml = `
             <a onclick="slowScroll('${menu.target_url}')">
@@ -100,7 +162,7 @@ function renderNavigation(menus, cariUnitActive) {
         drawerLinks.innerHTML += itemHtml;
     });
 
-    // 2. SISTEM INTELEKTUAL: Sisipkan otomatis "Cek Unit" jika status sakelar AKTIF (cari_unit_active = 1)
+    // SISTEM INTELEKTUAL SAKELAR CARI UNIT
     if (cariUnitActive === "1") {
         const cekUnitHtml = `
             <a href="cariunit.html">
@@ -111,13 +173,11 @@ function renderNavigation(menus, cariUnitActive) {
         desktopNav.innerHTML += `<li>${cekUnitHtml}</li>`;
         drawerLinks.innerHTML += cekUnitHtml;
         
-        // Tampilkan tombol navigasi floating mobile bawah ponsel
         const mobileCekBtn = document.getElementById('mobileCekUnitLink');
         if (mobileCekBtn) {
             mobileCekBtn.style.setProperty('display', 'block', 'important');
         }
     } else {
-        // Sembunyikan tombol navigasi floating mobile bawah ponsel jika dinonaktifkan
         const mobileCekBtn = document.getElementById('mobileCekUnitLink');
         if (mobileCekBtn) {
             mobileCekBtn.style.setProperty('display', 'none', 'important');
@@ -189,9 +249,7 @@ function getAutoImage(type) {
 
 async function loadFleet() {
     try {
-        const res = await fetch(`${BASE_API_URL}/api/fleet`, {
-            headers: { 'X-Tenant-ID': TENANT_ID }
-        });
+        const res = await fetch(liveGasUrl);
         const data = await res.json();
         renderFleet(data.items);
     } catch (e) {
