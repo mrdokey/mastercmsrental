@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS Multi-Tenant Admin Control Panel</title>
+    <title>Rental CMS Admin Control Panel</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -18,7 +18,7 @@
         <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-gray-100">
             <div class="text-center mb-6">
                 <i class="fas fa-cubes text-4xl text-indigo-600 mb-2"></i>
-                <h2 class="text-2xl font-black text-gray-900">SaaS Admin Portal</h2>
+                <h2 class="text-2xl font-black text-gray-900">Rental Admin Portal</h2>
                 <p class="text-gray-500 text-sm mt-1">Multi-Tenant Dynamic Engine</p>
             </div>
             
@@ -37,7 +37,6 @@
             </button>
         </div>
         
-        <!-- FOOTER LOGIN -->
         <div class="mt-6 text-center text-xs text-gray-400">
             Powered by <a href="https://www.mrdsolution.my.id" target="_blank" class="text-indigo-600 font-bold hover:underline">MRD Digital Solution</a>
         </div>
@@ -49,38 +48,42 @@
         <!-- SIDEBAR MENU -->
         <aside class="w-full md:w-64 bg-indigo-900 text-white flex flex-col">
             <div class="p-6 border-b border-indigo-800 text-center">
-                <h3 class="text-md font-black tracking-wider text-yellow-400">CONTROL CENTER</h3>
+                <h3 class="text-md font-black tracking-wider text-yellow-400">CMS RENTAL CONTROL</h3>
                 <p class="text-xs text-indigo-300 mt-1" id="currentTenantName">Loading...</p>
             </div>
-            <nav class="flex-1 p-4 space-y-2">
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
                 <button onclick="switchTab('settings')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left bg-indigo-800"><i class="fas fa-cog"></i> Pengaturan Umum</button>
                 <button onclick="switchTab('theme')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left"><i class="fas fa-palette"></i> Pilih Tema Warna</button>
-                <button onclick="switchTab('instagram')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left"><i class="fab fa-instagram"></i> Widget Instagram</button>
+                <button onclick="switchTab('navigation')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left"><i class="fas fa-bars"></i> Menu Navigasi</button>
+                <button onclick="switchTab('posts')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left"><i class="fas fa-bullhorn"></i> Artikel & Promo</button>
+                <button onclick="switchTab('pages')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left"><i class="fas fa-file-alt"></i> Halaman Kustom</button>
+                <button onclick="switchTab('testimonials')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left"><i class="fas fa-comment-dots"></i> Testimoni</button>
+                <button onclick="switchTab('galleries')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-800 text-sm font-bold transition text-left"><i class="fas fa-images"></i> Galeri Album</button>
                 <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-sm font-bold transition text-left mt-10"><i class="fas fa-sign-out-alt"></i> Keluar</button>
             </nav>
         </aside>
 
         <!-- CONTAINER KONTEN -->
-        <main class="flex-1 p-6 md:p-10 flex flex-col justify-between">
+        <main class="flex-1 p-6 md:p-10 flex flex-col justify-between overflow-y-auto max-h-screen">
             
             <div class="flex-1">
                 <!-- TAB 1: SETELAN UMUM -->
                 <section id="tab-settings" class="tab-content">
-                    <div class="max-w-3xl bg-white p-8 rounded-3xl shadow-md border border-gray-50">
+                    <div class="bg-white p-8 rounded-3xl shadow-md border border-gray-50">
                         <h2 class="text-xl font-extrabold mb-6 text-gray-900 border-b pb-4"><i class="fas fa-cog text-indigo-600 me-2"></i> Pengaturan Website Klien</h2>
                         <form id="settingsForm" class="space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-600 mb-1">Nama Website</label>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Nama Website / Perusahaan</label>
                                     <input type="text" name="site_name" class="w-full p-3 border rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 text-sm">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-600 mb-1">Tagline</label>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Sub-Judul Tagline Website</label>
                                     <input type="text" name="tagline" class="w-full p-3 border rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 text-sm">
                                 </div>
                             </div>
                             
-                            <!-- INTEGRASI INLINE UPLOAD UNTUK LOGO & FAVICON -->
+                            <!-- LOGO & FAVICON DENGAN INLINE FILE UPLOADER -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 mb-1">Logo Website</label>
@@ -119,7 +122,7 @@
                                 </div>
                             </div>
 
-                            <!-- SAKELAR INTEGRASI DYNAMIC CARI UNIT -->
+                            <!-- CONFIG SAKELAR CARI UNIT -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-bold text-indigo-600 mb-1">Status Fitur Cari Unit (Real-Time Availability)</label>
@@ -131,6 +134,24 @@
                                 <div>
                                     <label class="block text-xs font-bold text-red-600 mb-1">Kunci Token Keamanan Admin (Ubah Token)</label>
                                     <input type="text" name="admin_token" id="adminTokenField" placeholder="Masukkan token keamanan kustom" class="w-full p-3 border border-red-200 rounded-xl outline-none focus:ring-1 focus:ring-red-500 text-sm font-semibold">
+                                </div>
+                            </div>
+
+                            <!-- WIDGET INSTAGRAM SAKELAR -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Status Embed Instagram</label>
+                                    <select name="instagram_active" id="instagramActiveField" class="w-full p-3 border rounded-xl outline-none text-sm font-semibold">
+                                        <option value="1">ON - Tampilkan Iframe Feed</option>
+                                        <option value="0">OFF - Sembunyikan Grid Instagram</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Instagram Username / ID Handle</label>
+                                    <div class="flex">
+                                        <span class="bg-gray-100 p-3 border border-r-0 rounded-l-xl text-gray-400 font-semibold text-sm">@</span>
+                                        <input type="text" name="instagram_username" id="instagramUserField" placeholder="493scooterrentals" class="flex-1 p-3 border rounded-r-xl outline-none text-sm font-semibold">
+                                    </div>
                                 </div>
                             </div>
 
@@ -210,28 +231,93 @@
                     </div>
                 </section>
 
-                <!-- TAB 3: SMART INSTAGRAM WIDGET SAKELAR -->
-                <section id="tab-instagram" class="tab-content hidden">
-                    <div class="max-w-3xl bg-white p-8 rounded-3xl shadow-md border border-gray-50">
-                        <h2 class="text-xl font-extrabold mb-6 text-gray-900 border-b pb-4"><i class="fab fa-instagram text-indigo-600 me-2"></i> Integrasi Galeri Instagram Dinamis</h2>
-                        <form id="instagramForm" class="space-y-6">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Status Embed Instagram</label>
-                                <select name="instagram_active" id="instagramActiveField" class="w-full p-3 border rounded-xl outline-none text-sm font-semibold">
-                                    <option value="1">ON - Tampilkan Iframe Feed</option>
-                                    <option value="0">OFF - Sembunyikan Grid Instagram</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Instagram Username / ID Handle</label>
-                                <div class="flex">
-                                    <span class="bg-gray-100 p-3 border border-r-0 rounded-l-xl text-gray-400 font-semibold text-sm">@</span>
-                                    <input type="text" name="instagram_username" id="instagramUserField" placeholder="493scooterrentals" class="flex-1 p-3 border rounded-r-xl outline-none text-sm font-semibold">
-                                </div>
-                                <p class="text-xs text-gray-400 mt-2">Masukkan nama akun Instagram tanpa tanda @. Sistem JavaScript akan merender widget secara otomatis.</p>
-                            </div>
-                            <button type="button" onclick="saveInstagram()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-md">Simpan Pengaturan Instagram</button>
-                        </form>
+                <!-- TAB 3: MENU NAVIGASI (CRUD TABLE) -->
+                <section id="tab-navigation" class="tab-content hidden">
+                    <div class="bg-white p-8 rounded-3xl shadow-md border border-gray-50">
+                        <div class="flex justify-between items-center mb-6 border-b pb-4">
+                            <h2 class="text-xl font-extrabold text-gray-900"><i class="fas fa-bars text-indigo-600 me-2"></i> Susun Menu Navigasi Website</h2>
+                            <button onclick="openNavigationModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-xl shadow-sm"><i class="fas fa-plus me-1"></i> Tambah Menu</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3">Nama Menu (ID)</th>
+                                        <th class="px-6 py-3">Nama Menu (EN)</th>
+                                        <th class="px-6 py-3">Link Target URL</th>
+                                        <th class="px-6 py-3">Urutan</th>
+                                        <th class="px-6 py-3">Status</th>
+                                        <th class="px-6 py-3 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="navigationTableBody">
+                                    <!-- Diisi dinamis -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 4: ARTIKEL & PROMO (CRUD) -->
+                <section id="tab-posts" class="tab-content hidden">
+                    <div class="bg-white p-8 rounded-3xl shadow-md border border-gray-50">
+                        <div class="flex justify-between items-center mb-6 border-b pb-4">
+                            <h2 class="text-xl font-extrabold text-gray-900"><i class="fas fa-bullhorn text-indigo-600 me-2"></i> Manajemen Artikel & Promo</h2>
+                            <button onclick="openPostModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-xl shadow-sm"><i class="fas fa-plus me-1"></i> Buat Artikel Baru</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="postsGridContainer">
+                            <!-- Diisi dinamis -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 5: HALAMAN KUSTOM (CRUD) -->
+                <section id="tab-pages" class="tab-content hidden">
+                    <div class="bg-white p-8 rounded-3xl shadow-md border border-gray-50">
+                        <div class="flex justify-between items-center mb-6 border-b pb-4">
+                            <h2 class="text-xl font-extrabold text-gray-900"><i class="fas fa-file-alt text-indigo-600 me-2"></i> Manajemen Halaman Kustom (ToS/FAQ)</h2>
+                            <button onclick="openPageModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-xl shadow-sm"><i class="fas fa-plus me-1"></i> Buat Halaman Baru</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3">Judul Halaman</th>
+                                        <th class="px-6 py-3">Slug URL</th>
+                                        <th class="px-6 py-3 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pagesTableBody">
+                                    <!-- Diisi dinamis -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 6: TESTIMONI PELANGGAN (CRUD) -->
+                <section id="tab-testimonials" class="tab-content hidden">
+                    <div class="bg-white p-8 rounded-3xl shadow-md border border-gray-50">
+                        <div class="flex justify-between items-center mb-6 border-b pb-4">
+                            <h2 class="text-xl font-extrabold text-gray-900"><i class="fas fa-comment-dots text-indigo-600 me-2"></i> Testimoni Ulasan Pelanggan</h2>
+                            <button onclick="openTestimonialModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-xl shadow-sm"><i class="fas fa-plus me-1"></i> Tambah Ulasan</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="testimonialsGridContainer">
+                            <!-- Diisi dinamis -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 7: GALERI ALBUM (CRUD) -->
+                <section id="tab-galleries" class="tab-content hidden">
+                    <div class="bg-white p-8 rounded-3xl shadow-md border border-gray-50">
+                        <div class="flex justify-between items-center mb-6 border-b pb-4">
+                            <h2 class="text-xl font-extrabold text-gray-900"><i class="fas fa-images text-indigo-600 me-2"></i> Galeri Album Foto Website</h2>
+                            <button onclick="openGalleryModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-xl shadow-sm"><i class="fas fa-plus me-1"></i> Unggah Foto Baru</button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="galleriesGridContainer">
+                            <!-- Diisi dinamis -->
+                        </div>
                     </div>
                 </section>
             </div>
@@ -243,6 +329,9 @@
 
         </main>
     </div>
+
+    <!-- MODAL POPUP MODULAR UNTUK SINKRONISASI INPUT DATA (CRUD POPUP) -->
+    <!-- Elemen Modal Render dengan SweetAlert2 secara dinamis di admin.js -->
 
     <script src="admin.js"></script>
 </body>
