@@ -3,7 +3,7 @@ const BASE_API_URL = "https://wa.mrdsolution.my.id/cms-api";
 let tenantId = "";
 let apiKey = "";
 
-// CREDENTIALS CLOUDINARY UNTUK INLINE UPLOADER
+// CREDENTIALS INTEGRASI CLOUDINARY UNTUK INLINE UPLOADER
 const CLOUDINARY_CLOUD_NAME = "dnobafum2";
 const CLOUDINARY_PRESET = "cms_rental";
 
@@ -14,8 +14,8 @@ let localNavigation = [];
 let localTestimonials = [];
 let localGallery = [];
 let localSliders = [];
-let localPages = []; // State Baru untuk Halaman ToS/FAQ
-let localPosts = []; // State Baru untuk Artikel & Promo
+let localPages = [];
+let localPosts = [];
 
 window.onload = function() {
     const savedTenant = localStorage.getItem('cms_tenant_id');
@@ -32,7 +32,7 @@ window.onload = function() {
 }
 
 // ------------------------------------------------------------
-// UTILITY: COPY TO CLIPBOARD (TOMBOL SALIN TAUTAN COPIER)
+// UTILITY: SAKTI COPY LINK TO CLIPBOARD (TOMBOL SALIN TAUTAN COPIER)
 // ------------------------------------------------------------
 function copyToClipboard(text) {
     const tempInput = document.createElement("input");
@@ -43,12 +43,17 @@ function copyToClipboard(text) {
     document.execCommand("copy");
     document.body.removeChild(tempInput);
     
-    Swal.fire({
-        title: 'Tautan Disalin!',
-        text: 'Silakan tempel (paste) tautan ini ke kolom target Menu Navigasi.',
-        icon: 'success',
+    // Gunakan Toast kecil di pojok kanan atas agar tidak menutup dashboard utama
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
         timer: 1800,
-        showConfirmButton: false
+        timerProgressBar: true
+    });
+    Toast.fire({
+        icon: 'success',
+        title: 'Tautan disalin ke clipboard.'
     });
 }
 
@@ -131,7 +136,7 @@ async function loadSettings() {
             document.getElementById('instagramActiveField').value = settings.instagram_active || "0";
             document.getElementById('instagramUserField').value = settings.instagram_username || "";
 
-            // Parse Array JSON secara aman (WordPress-Like)
+            // Parse Array JSON secara aman
             try { localNavigation = JSON.parse(settings.navigation_menu || "[]"); } catch (e) { localNavigation = []; }
             try { localTestimonials = JSON.parse(settings.site_testimonials || "[]"); } catch (e) { localTestimonials = []; }
             try { localGallery = JSON.parse(settings.site_gallery || "[]"); } catch (e) { localGallery = []; }
@@ -139,7 +144,7 @@ async function loadSettings() {
             try { localPages = JSON.parse(settings.site_pages || "[]"); } catch (e) { localPages = []; }
             try { localPosts = JSON.parse(settings.site_posts || "[]"); } catch (e) { localPosts = []; }
 
-            // Tampilkan Pratinjau Gambar Dinamis (Jika URL tersedia)
+            // Tampilkan Pratinjau Gambar Dinamis
             updateImagePreview('logoUrlField', settings.logo_url);
             updateImagePreview('faviconUrlField', settings.favicon_url);
 
@@ -150,7 +155,7 @@ async function loadSettings() {
     }
 }
 
-// FUNGSI UTILITY INLINE FILE SELECTOR
+// FUNGSI AKTIVATOR DIALOG FILE SELECTOR
 function triggerInlineUpload(targetFieldId) {
     activeInlineTargetId = targetFieldId;
     document.getElementById('inlineCloudinaryFile').click();
@@ -162,13 +167,33 @@ async function handleInlineImageUpload() {
     if (!fileInput.files || fileInput.files.length === 0) return;
 
     const file = fileInput.files[0];
+    const isModalTarget = activeInlineTargetId.startsWith("modal-");
 
-    Swal.fire({
-        title: 'Mengunggah Gambar...',
-        text: 'Mengirim file gambar langsung ke CDN Cloudinary.',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
+    let uploadBtn = null;
+    let uploadLoader = null;
+
+    // RESOLUTION: Jika dipanggil dari dalam modal, lakukan disable tombol modal & show text loader lokal
+    if (isModalTarget) {
+        uploadBtn = document.getElementById(activeInlineTargetId + "-upload-btn");
+        uploadLoader = document.getElementById(activeInlineTargetId + "-upload-loader");
+        
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.innerText = "Uploading...";
+            uploadBtn.classList.add("opacity-50");
+        }
+        if (uploadLoader) {
+            uploadLoader.classList.remove("hidden");
+        }
+    } else {
+        // Sebaliknya, jika di halaman utama pengaturan biasa, panggil loading Swal standard
+        Swal.fire({
+            title: 'Mengunggah Gambar...',
+            text: 'Mengirim file gambar langsung ke CDN Cloudinary.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+    }
 
     const formData = new FormData();
     formData.append('file', file);
@@ -181,52 +206,70 @@ async function handleInlineImageUpload() {
         });
         const data = await res.json();
 
-        Swal.close();
+        // Kembalikan status tombol ke semula
+        if (isModalTarget) {
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.innerText = "Upload";
+                uploadBtn.classList.remove("opacity-50");
+            }
+            if (uploadLoader) {
+                uploadLoader.classList.add("hidden");
+            }
+        } else {
+            Swal.close();
+        }
 
         if (data.secure_url) {
-            if (activeInlineTargetId.startsWith("modal-")) {
-                const targetInput = document.getElementById(activeInlineTargetId);
-                if (targetInput) {
-                    targetInput.value = data.secure_url;
-                    const modalPreview = document.getElementById(activeInlineTargetId + "-preview");
-                    if (modalPreview) modalPreview.src = data.secure_url;
-                }
-            } else {
-                const targetField = document.getElementById(activeInlineTargetId);
+            const targetField = document.getElementById(activeInlineTargetId);
+            if (targetField) {
                 targetField.value = data.secure_url;
+            }
+
+            // Update Pratinjau Gambar Dinamis
+            const modalPreview = document.getElementById(activeInlineTargetId + "-preview");
+            if (modalPreview) {
+                modalPreview.src = data.secure_url;
+            } else {
                 updateImagePreview(activeInlineTargetId, data.secure_url);
             }
 
-            Swal.fire({
-                title: 'Berhasil di-upload!',
-                text: 'Gambar CDN Cloudinary siap digunakan.',
+            // Notifikasi Toast kecil yang melayang di kanan atas agar tidak menutup modal
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
+            });
+            Toast.fire({
                 icon: 'success',
-                timer: 1200,
-                showConfirmButton: false
+                title: 'Gambar berhasil diupload!'
             });
         } else {
             Swal.fire('Gagal', 'Terjadi kesalahan pemrosesan Cloudinary.', 'error');
         }
     } catch (err) {
-        Swal.close();
-        Swal.fire('Error', 'Gagal terhubung ke server Cloudinary API.', 'error');
+        // Kembalikan status tombol ke semula jika terjadi kegagalan jaringan
+        if (isModalTarget) {
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.innerText = "Upload";
+                uploadBtn.classList.remove("opacity-50");
+            }
+            if (uploadLoader) {
+                uploadLoader.classList.add("hidden");
+            }
+        } else {
+            Swal.close();
+        }
+        Swal.fire('Error', 'Gagal menghubungkan ke server Cloudinary API.', 'error');
     }
 
     fileInput.value = "";
 }
 
-function updateImagePreview(fieldId, url) {
-    const previewImg = document.getElementById(`${fieldId}-preview`);
-    const previewContainer = document.getElementById(`${fieldId}-preview-container`);
-    
-    if (url && url.startsWith('http')) {
-        previewImg.src = url;
-        previewContainer.classList.remove('hidden');
-    } else {
-        previewContainer.classList.add('hidden');
-    }
-}
-
+// HANDLER COLOR PICKER SINKRONISASI
 const pickerMap = [
     { picker: 'primaryColorInput', text: 'primaryHexText' },
     { picker: 'secondaryColorInput', text: 'secondaryHexText' },
@@ -526,8 +569,9 @@ async function openSliderModal(indexToEdit = null) {
                     <label class="block text-xs font-bold text-gray-600 mb-1">File Gambar Banner (Direct Upload)</label>
                     <div class="flex gap-2">
                         <input id="modal-slide-image" class="swal2-input flex-1 m-0 rounded-xl text-xs font-mono" placeholder="https://..." value="${currentItem.image_url}">
-                        <button type="button" onclick="triggerInlineUpload('modal-slide-image')" class="bg-indigo-600 text-white font-bold px-3 rounded-xl text-xs">Upload</button>
+                        <button type="button" id="modal-slide-image-upload-btn" onclick="triggerInlineUpload('modal-slide-image')" class="bg-indigo-600 text-white font-bold px-3 rounded-xl text-xs">Upload</button>
                     </div>
+                    <div id="modal-slide-image-upload-loader" class="hidden text-xs text-indigo-600 font-bold mt-1 animate-pulse">Mengunggah gambar...</div>
                     <div class="mt-2 text-center">
                         <img id="modal-slide-image-preview" class="max-h-24 rounded border object-contain mx-auto bg-gray-50" src="${currentItem.image_url || 'https://placehold.co/200x100/3E2723/ffffff?text=Preview'}">
                     </div>
@@ -826,8 +870,9 @@ async function openTestimonialModal(indexToEdit = null) {
                     <label class="block text-xs font-bold text-gray-600 mb-1">Link Foto Pelanggan (Avatar URL)</label>
                     <div class="flex gap-2">
                         <input id="modal-testi-avatar" class="swal2-input flex-1 m-0 rounded-xl text-xs font-mono" placeholder="https://..." value="${currentItem.customer_avatar}">
-                        <button type="button" onclick="triggerInlineUpload('modal-testi-avatar')" class="bg-indigo-600 text-white font-bold px-3 rounded-xl text-xs">Upload</button>
+                        <button type="button" id="modal-testi-avatar-upload-btn" onclick="triggerInlineUpload('modal-testi-avatar')" class="bg-indigo-600 text-white font-bold px-3 rounded-xl text-xs">Upload</button>
                     </div>
+                    <div id="modal-testi-avatar-upload-loader" class="hidden text-xs text-indigo-600 font-bold mt-1 animate-pulse">Mengunggah avatar...</div>
                     <div class="mt-2 text-center">
                         <img id="modal-testi-avatar-preview" class="w-10 h-10 rounded-full border object-cover mx-auto" src="${currentItem.customer_avatar || 'https://placehold.co/100/3E2723/ffffff?text=U'}">
                     </div>
@@ -950,8 +995,9 @@ async function openGalleryModal(indexToEdit = null) {
                     <label class="block text-xs font-bold text-gray-600 mb-1">File Gambar (Image CDN URL)</label>
                     <div class="flex gap-2">
                         <input id="modal-gal-image" class="swal2-input flex-1 m-0 rounded-xl text-xs font-mono" placeholder="https://..." value="${currentItem.image_url}">
-                        <button type="button" onclick="triggerInlineUpload('modal-gal-image')" class="bg-indigo-600 text-white font-bold px-3 rounded-xl text-xs">Upload</button>
+                        <button type="button" id="modal-gal-image-upload-btn" onclick="triggerInlineUpload('modal-gal-image')" class="bg-indigo-600 text-white font-bold px-3 rounded-xl text-xs">Upload</button>
                     </div>
+                    <div id="modal-gal-image-upload-loader" class="hidden text-xs text-indigo-600 font-bold mt-1 animate-pulse">Mengunggah foto...</div>
                     <div class="mt-2 text-center">
                         <img id="modal-gal-image-preview" class="max-h-24 rounded border object-contain mx-auto bg-gray-50" src="${currentItem.image_url || 'https://placehold.co/200x100/3E2723/ffffff?text=Preview'}">
                     </div>
